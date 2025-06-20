@@ -1,0 +1,47 @@
+{
+    "name": "glitch-haven-bot",
+    "version": "1.0.0",
+    "description": "An advanced Discord bot with moderation, welcome features, games, and user assistance",
+    "main": "src/index.js",
+    "scripts": {
+        "start": "node src/index.js",
+        "dev": "nodemon src/index.js",
+        "lint": "eslint src/",
+        "test": "jest",
+        "setup": "node scripts/setup.js",
+        "backup": "node scripts/backup.js"
+    },
+    "keywords": [
+        "discord",
+        "bot",
+        "moderation",
+        "games",
+        "welcome"
+    ],
+    "author": "Your Name",
+    "license": "MIT",
+    "dependencies": {
+        "@twurple/api": "^7.3.0",
+        "@twurple/auth": "^7.3.0",
+        "discord.js": "^14.14.1",
+        "dotenv": "^16.3.1",
+        "jimp": "^1.6.0",
+        "moment": "^2.29.4",
+        "mongoose": "^8.0.3",
+        "node-cron": "^3.0.3",
+        "winston": "^3.11.0"
+    },
+    "devDependencies": {
+        "eslint": "^8.55.0",
+        "jest": "^29.7.0",
+        "nodemon": "^3.0.2"
+    },
+    "nodemonConfig": {
+        "ignore": [
+            "logs/*.log"
+        ]
+    },
+    "engines": {
+        "node": ">=18.0.0"
+    }
+}
