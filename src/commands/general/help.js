@@ -119,7 +119,7 @@ module.exports = {
       value: [
         "• **Reputation**: Build trust with endorsements and reputation badges",
         "• **Moderation**: Manage your server with powerful moderation tools",
-        "• **Games**: Have fun with coin flipping, adventures, pets, and turn-based games",
+        "• **Games**: Have fun with coin flipping, adventures, pets, turn-based games, and slapping!",
         "• **Welcome**: Customize welcome messages and auto-roles",
         "• **Utility**: Useful commands for server management",
       ].join("\n"),
@@ -176,6 +176,9 @@ function getCommandCategory(commandName) {
     pet: "Games",
     turn: "Games",
     lfg: "Games",
+    slap: "Games",
+    slapstats: "Games",
+    slapleaderboard: "Games",
 
     // Welcome commands
     welcome: "Welcome",

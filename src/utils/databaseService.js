@@ -136,6 +136,8 @@ class DatabaseService {
             return await User.getRPSLeaderboard(guildId, limit);
           case "reputation":
             return await User.getReputationLeaderboard(guildId, limit);
+          case "slap":
+            return await User.getSlapLeaderboard(guildId, limit);
           default:
             return await User.getLevelLeaderboard(guildId, limit);
         }

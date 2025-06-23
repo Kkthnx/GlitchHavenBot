@@ -7,12 +7,6 @@ module.exports = {
   async execute(client) {
     logger.info(`Logged in as ${client.user.tag}`);
 
-    // Test presence intent
-    const guild = client.guilds.cache.first();
-    if (guild) {
-      logger.info(`Initialized guild: ${guild.name} (${guild.id})`);
-    }
-
     // Set bot status
     client.user.setPresence({
       activities: [

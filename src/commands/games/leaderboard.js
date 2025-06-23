@@ -16,7 +16,7 @@ module.exports = {
       const type = args[0]?.toLowerCase() || "coinflip";
 
       // Validate leaderboard type
-      const validTypes = ["coinflip", "level", "rps"];
+      const validTypes = ["coinflip", "level", "rps", "slap"];
       if (!validTypes.includes(type)) {
         return message.reply(
           `❌ Invalid leaderboard type. Use: ${validTypes.join(", ")}`,
@@ -79,6 +79,11 @@ module.exports = {
             statsText = `Wins: \`${rpsStats.wins}\` | Losses: \`${rpsStats.losses}\` | Win Rate: \`${rpsWinRate}%\``;
             break;
           }
+          case "slap": {
+            const slapStats = dbUser.gameStats.slaps;
+            statsText = `Slaps Given: \`${slapStats.given}\` | Slaps Received: \`${slapStats.received}\``;
+            break;
+          }
         }
 
         description += `${medal} **${username}**\n`;
@@ -106,6 +111,8 @@ function getLeaderboardColor(type) {
       return 0x00ff00; // Green
     case "rps":
       return 0x3498db; // Blue
+    case "slap":
+      return 0xff6b6b; // Red
     default:
       return 0xf1c40f;
   }
@@ -119,6 +126,8 @@ function getLeaderboardTitle(type) {
       return "Level Leaderboard";
     case "rps":
       return "Rock Paper Scissors Leaderboard";
+    case "slap":
+      return "Slap Leaderboard";
     default:
       return "Leaderboard";
   }

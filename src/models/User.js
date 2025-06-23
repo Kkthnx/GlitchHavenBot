@@ -64,6 +64,12 @@ const userSchema = new mongoose.Schema(
         losses: { type: Number, default: 0 },
         ties: { type: Number, default: 0 },
       },
+      slaps: {
+        given: { type: Number, default: 0 },
+        received: { type: Number, default: 0 },
+        lastSlapGiven: Date,
+        lastSlapReceived: Date,
+      },
       lastFlip: Date,
     },
 
@@ -153,6 +159,8 @@ userSchema.index({ "gameStats.coinFlips.wins": -1 });
 userSchema.index({ "gameStats.coinFlips.total": -1 });
 userSchema.index({ "gameStats.coinFlips.bestStreak": -1 });
 userSchema.index({ "gameStats.rps.wins": -1 });
+userSchema.index({ "gameStats.slaps.given": -1 });
+userSchema.index({ "gameStats.slaps.received": -1 });
 userSchema.index({ birthday: 1 }, { sparse: true });
 userSchema.index({ "reputation.score": -1 }); // For reputation leaderboards
 
@@ -160,6 +168,7 @@ userSchema.index({ "reputation.score": -1 }); // For reputation leaderboards
 userSchema.index({ guildId: 1, "leveling.level": -1, "leveling.xp": -1 });
 userSchema.index({ guildId: 1, "gameStats.coinFlips.wins": -1 });
 userSchema.index({ guildId: 1, "gameStats.rps.wins": -1 });
+userSchema.index({ guildId: 1, "gameStats.slaps.given": -1 });
 userSchema.index({ guildId: 1, "reputation.score": -1 }); // Guild-specific reputation leaderboards
 userSchema.index({ "leveling.lastMessageTimestamp": 1 });
 userSchema.index({ "gameStats.lastFlip": 1 });
@@ -259,6 +268,18 @@ userSchema.methods.recordCoinFlip = function (won) {
   } else {
     this.gameStats.coinFlips.losses++;
     this.gameStats.coinFlips.streak = 0;
+  }
+
+  return this.save();
+};
+
+userSchema.methods.recordSlap = function (isGiving = true) {
+  if (isGiving) {
+    this.gameStats.slaps.given++;
+    this.gameStats.slaps.lastSlapGiven = new Date();
+  } else {
+    this.gameStats.slaps.received++;
+    this.gameStats.slaps.lastSlapReceived = new Date();
   }
 
   return this.save();
@@ -450,6 +471,12 @@ userSchema.statics.getReputationLeaderboard = async function (
 userSchema.statics.getRPSLeaderboard = async function (guildId, limit = 10) {
   return this.find({ guildId })
     .sort({ "gameStats.rps.wins": -1, "gameStats.rps.total": -1 })
+    .limit(limit);
+};
+
+userSchema.statics.getSlapLeaderboard = async function (guildId, limit = 10) {
+  return this.find({ guildId })
+    .sort({ "gameStats.slaps.given": -1, "gameStats.slaps.received": -1 })
     .limit(limit);
 };
 

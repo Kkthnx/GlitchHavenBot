@@ -48,6 +48,10 @@ const guildSchema = new mongoose.Schema(
         cooldown: { type: Number, default: 10 }, // Reduced from 30 to 10 seconds
         streakRewards: { type: Boolean, default: true },
       },
+      slap: {
+        enabled: { type: Boolean, default: true },
+        cooldown: { type: Number, default: 30 }, // 30 seconds default
+      },
     },
 
     // Leveling System Settings
