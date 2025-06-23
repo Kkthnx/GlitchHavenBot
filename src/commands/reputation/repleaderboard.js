@@ -1,141 +1,119 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const User = require('../../models/User');
+const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
+
+const User = require("../../models/User");
+const {
+  handleCommandError,
+  isSlashCommand,
+  replyToInteraction,
+  deferInteraction,
+} = require("../../utils/helpers");
 
 module.exports = {
-    // Legacy command format for compatibility
-    name: 'repleaderboard',
-    aliases: ['replb', 'reptop'],
-    description: 'Show the reputation leaderboard',
-    usage: '!repleaderboard [limit]',
-    cooldown: 10,
-    guildOnly: true,
+  // Legacy command format for compatibility
+  name: "repleaderboard",
+  aliases: ["replb", "reptop"],
+  description: "Show the reputation leaderboard",
+  usage: "!repleaderboard [limit]",
+  cooldown: 30,
+  guildOnly: true,
 
-    // Slash command data
-    data: new SlashCommandBuilder()
-        .setName('repleaderboard')
-        .setDescription('Show the reputation leaderboard')
-        .addIntegerOption(option =>
-            option.setName('limit')
-                .setDescription('Number of users to show (1-25)')
-                .setMinValue(1)
-                .setMaxValue(25)
-                .setRequired(false)),
+  // Slash command data
+  data: new SlashCommandBuilder()
+    .setName("repleaderboard")
+    .setDescription("Show the reputation leaderboard")
+    .addIntegerOption((option) =>
+      option
+        .setName("limit")
+        .setDescription("Number of users to show (1-25)")
+        .setMinValue(1)
+        .setMaxValue(25)
+        .setRequired(false),
+    ),
 
-    async execute(interaction, args, client) {
-        // Handle both slash commands and prefix commands
-        const isSlashCommand = interaction.options !== undefined;
+  async execute(interaction, args) {
+    await deferInteraction(interaction);
 
-        // Only defer for slash commands
-        if (isSlashCommand) {
-            await interaction.deferReply();
+    try {
+      let limit = 10;
+
+      if (isSlashCommand(interaction)) {
+        // Slash command handling
+        limit = interaction.options.getInteger("limit") || 10;
+      } else {
+        // Prefix command handling
+        if (args && args.length > 0) {
+          const parsedLimit = parseInt(args[0]);
+          if (!isNaN(parsedLimit) && parsedLimit >= 1 && parsedLimit <= 25) {
+            limit = parsedLimit;
+          }
         }
+      }
 
-        try {
-            let limit = 10;
+      const guildId = isSlashCommand(interaction)
+        ? interaction.guildId
+        : interaction.guild.id;
+      const leaderboard = await User.getReputationLeaderboard(guildId, limit);
 
-            if (isSlashCommand) {
-                // Slash command handling
-                limit = interaction.options.getInteger('limit') || 10;
-            } else {
-                // Prefix command handling
-                if (args && args.length > 0) {
-                    const parsedLimit = parseInt(args[0]);
-                    if (!isNaN(parsedLimit) && parsedLimit >= 1 && parsedLimit <= 25) {
-                        limit = parsedLimit;
-                    }
-                }
-            }
+      if (leaderboard.length === 0) {
+        const noDataEmbed = new EmbedBuilder()
+          .setColor("#ff8800")
+          .setTitle("📊 Reputation Leaderboard")
+          .setDescription(
+            "No reputation data found for this server yet.\nStart giving reputation with `!rep`!",
+          )
+          .setFooter({ text: "Reputation System" });
 
-            const guildId = isSlashCommand ? interaction.guildId : interaction.guild.id;
-            const leaderboard = await User.getReputationLeaderboard(guildId, limit);
+        return await replyToInteraction(interaction, { embeds: [noDataEmbed] });
+      }
 
-            if (leaderboard.length === 0) {
-                const noDataEmbed = new EmbedBuilder()
-                    .setColor('#ff8800')
-                    .setTitle('📊 Reputation Leaderboard')
-                    .setDescription('No reputation data found for this server yet.\nStart giving reputation with `!rep`!')
-                    .setFooter({ text: 'Reputation System' });
+      const embed = new EmbedBuilder()
+        .setColor("#7289da")
+        .setTitle("🏆 Reputation Leaderboard")
+        .setDescription(`Top ${leaderboard.length} most trusted members`)
+        .setThumbnail(interaction.guild.iconURL({ dynamic: true }))
+        .setTimestamp()
+        .setFooter({ text: `Reputation System • ${interaction.guild.name}` });
 
-                return isSlashCommand ?
-                    interaction.editReply({ embeds: [noDataEmbed] }) :
-                    interaction.reply({ embeds: [noDataEmbed] });
-            }
+      let description = "";
+      const medals = ["🥇", "🥈", "🥉"];
 
-            const embed = new EmbedBuilder()
-                .setColor('#7289da')
-                .setTitle('🏆 Reputation Leaderboard')
-                .setDescription(`Top ${leaderboard.length} most trusted members`)
-                .setThumbnail(interaction.guild.iconURL({ dynamic: true }))
-                .setTimestamp()
-                .setFooter({ text: `Reputation System • ${interaction.guild.name}` });
+      for (let i = 0; i < leaderboard.length; i++) {
+        const user = leaderboard[i];
+        const medal = i < 3 ? medals[i] : `${i + 1}.`;
+        const repScore = user.reputation?.score || 0;
+        const endorsements = user.reputation?.totalEndorsements || 0;
 
-            let description = '';
-            for (let i = 0; i < leaderboard.length; i++) {
-                const user = leaderboard[i];
-                const rank = i + 1;
+        description += `${medal} **${user.username}**\n`;
+        description += `   Reputation: **${repScore}** | Endorsements: **${endorsements}**\n\n`;
+      }
 
-                // Get user from Discord cache or mention them
-                const discordUser = interaction.client.users.cache.get(user.userId);
-                const displayName = discordUser ? discordUser.username : user.username;
+      embed.setDescription(description);
 
-                // Rank emoji
-                let rankEmoji = '🔹';
-                if (rank === 1) rankEmoji = '🥇';
-                else if (rank === 2) rankEmoji = '🥈';
-                else if (rank === 3) rankEmoji = '🥉';
-                else if (rank <= 10) rankEmoji = '🔸';
+      // Add server statistics
+      const totalUsers = await User.countDocuments({ guildId });
+      const usersWithRep = await User.countDocuments({
+        guildId,
+        "reputation.score": { $gt: 0 },
+      });
 
-                // Reputation badges
-                let badge = '';
-                if (user.reputation.score >= 50) badge = ' 🏆';
-                else if (user.reputation.score >= 25) badge = ' ⭐';
-                else if (user.reputation.score >= 10) badge = ' 🌟';
-                else if (user.reputation.score >= 5) badge = ' 👍';
+      const percentile =
+        totalUsers > 0 ? Math.round((usersWithRep / totalUsers) * 100) : 0;
 
-                description += `${rankEmoji} **${rank}.** ${displayName}${badge}\n`;
-                description += `   Rep: **${user.reputation.score}** • Endorsements: **${user.reputation.totalEndorsements}**\n\n`;
-            }
+      embed.addFields({
+        name: "📈 Server Standing",
+        value: `Top **${percentile}%** of ${totalUsers} members\n${usersWithRep} members have reputation`,
+        inline: false,
+      });
 
-            embed.setDescription(description);
-
-            // Add stats at the bottom
-            const totalUsers = await User.countDocuments({ guildId: guildId });
-            const usersWithRep = await User.countDocuments({
-                guildId: guildId,
-                'reputation.score': { $gt: 0 }
-            });
-
-            embed.addFields({
-                name: '📈 Server Stats',
-                value: `Total Members: **${totalUsers}**\nMembers with Rep: **${usersWithRep}**\nReputation Given: **${leaderboard.reduce((sum, user) => sum + user.reputation.totalEndorsements, 0)}**`,
-                inline: false
-            });
-
-            return isSlashCommand ?
-                interaction.editReply({ embeds: [embed] }) :
-                interaction.reply({ embeds: [embed] });
-
-        } catch (error) {
-            console.error('Error in repleaderboard command:', error);
-            return isSlashCommand ?
-                interaction.editReply({
-                    embeds: [
-                        new EmbedBuilder()
-                            .setColor('#ff4444')
-                            .setTitle('❌ Error')
-                            .setDescription('An error occurred while fetching the reputation leaderboard.')
-                            .setFooter({ text: 'Reputation System' })
-                    ]
-                }) :
-                interaction.reply({
-                    embeds: [
-                        new EmbedBuilder()
-                            .setColor('#ff4444')
-                            .setTitle('❌ Error')
-                            .setDescription('An error occurred while fetching the reputation leaderboard.')
-                            .setFooter({ text: 'Reputation System' })
-                    ]
-                });
-        }
-    },
-}; 
+      return await replyToInteraction(interaction, { embeds: [embed] });
+    } catch (error) {
+      const errorEmbed = handleCommandError(
+        error,
+        "repleaderboard command",
+        console,
+        "An error occurred while fetching the reputation leaderboard.",
+      );
+      return await replyToInteraction(interaction, { embeds: [errorEmbed] });
+    }
+  },
+};

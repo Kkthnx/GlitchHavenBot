@@ -1,153 +1,111 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const User = require('../../models/User');
+const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
+
+const User = require("../../models/User");
+const {
+  handleCommandError,
+  isSlashCommand,
+  replyToInteraction,
+  deferInteraction,
+} = require("../../utils/helpers");
 
 module.exports = {
-    // Legacy command format for compatibility
-    name: 'repgiven',
-    aliases: ['repgiven', 'repout'],
-    description: 'Show who a user has given reputation to',
-    usage: '!repgiven [@user]',
-    cooldown: 5,
-    guildOnly: true,
+  name: "repgiven",
+  aliases: ["myreps", "givenrep"],
+  description: "Shows who you have given reputation to",
+  usage: "!repgiven",
+  cooldown: 30,
+  guildOnly: true,
 
-    // Slash command data
-    data: new SlashCommandBuilder()
-        .setName('repgiven')
-        .setDescription('Show who a user has given reputation to')
-        .addUserOption(option =>
-            option.setName('user')
-                .setDescription('The user to check (defaults to yourself)')
-                .setRequired(false)),
+  data: new SlashCommandBuilder()
+    .setName("repgiven")
+    .setDescription("Shows who you have given reputation to"),
 
-    async execute(interaction, args, client) {
-        // Handle both slash commands and prefix commands
-        const isSlashCommand = interaction.options !== undefined;
+  async execute(interaction, args, client) {
+    await deferInteraction(interaction);
 
-        // Only defer for slash commands
-        if (isSlashCommand) {
-            await interaction.deferReply();
-        }
+    try {
+      const guildId = isSlashCommand(interaction)
+        ? interaction.guildId
+        : interaction.guild.id;
+      const userId = isSlashCommand(interaction)
+        ? interaction.user.id
+        : interaction.author.id;
 
+      const userData = await User.findOne({ userId, guildId });
+      if (
+        !userData ||
+        !userData.reputation ||
+        userData.reputation.endorsements.length === 0
+      ) {
+        const noDataEmbed = new EmbedBuilder()
+          .setColor("#ff8800")
+          .setTitle("📊 Reputation Given")
+          .setDescription(
+            "You haven't given any reputation yet.\nUse `!rep @user` to give reputation!",
+          )
+          .setFooter({ text: "Reputation System" });
+
+        return await replyToInteraction(interaction, { embeds: [noDataEmbed] });
+      }
+
+      const { endorsements } = userData.reputation;
+      const totalGiven = endorsements.length;
+
+      const embed = new EmbedBuilder()
+        .setColor("#7289da")
+        .setTitle("📊 Reputation Given")
+        .setDescription(`You have given reputation to **${totalGiven}** users`)
+        .setThumbnail(interaction.user.displayAvatarURL({ dynamic: true }))
+        .setTimestamp()
+        .setFooter({ text: `Reputation System • ${interaction.guild.name}` });
+
+      // Sort by most recent endorsement
+      const sortedUsers = endorsements
+        .sort((a, b) => b.timestamp - a.timestamp)
+        .slice(0, 10); // Show top 10
+
+      let description = "";
+      for (const endorsement of sortedUsers) {
         try {
-            let targetUser;
+          const targetUser = await client.users.fetch(endorsement.givenTo);
+          const date = new Date(endorsement.timestamp).toLocaleDateString();
+          const messageText = endorsement.message ? ` (${endorsement.message})` : "";
 
-            if (isSlashCommand) {
-                // Slash command handling
-                targetUser = interaction.options.getUser('user') || interaction.user;
-            } else {
-                // Prefix command handling
-                if (args && args.length > 0) {
-                    const userId = args[0].replace(/[<@!>]/g, '');
-                    targetUser = await client.users.fetch(userId).catch(() => null);
-
-                    if (!targetUser) {
-                        return interaction.reply('❌ I couldn\'t find that user.');
-                    }
-                } else {
-                    targetUser = interaction.author;
-                }
-            }
-
-            // Get user data
-            const guildId = isSlashCommand ? interaction.guildId : interaction.guild.id;
-            const userData = await User.findOrCreate(targetUser.id, guildId, {
-                username: targetUser.username,
-                discriminator: targetUser.discriminator || '0',
-                avatar: targetUser.avatar
-            });
-
-            // Find all users this person has endorsed
-            const endorsedUsers = await User.find({
-                guildId,
-                'reputation.endorsements.fromUserId': targetUser.id
-            }).sort({ 'reputation.endorsements.timestamp': -1 });
-
-            if (endorsedUsers.length === 0) {
-                const noDataEmbed = new EmbedBuilder()
-                    .setColor('#ff8800')
-                    .setTitle('📊 Reputation Given')
-                    .setDescription(`${targetUser.username} hasn't given any reputation yet.`)
-                    .setThumbnail(targetUser.displayAvatarURL({ dynamic: true }))
-                    .setFooter({ text: 'Reputation System' });
-
-                return isSlashCommand ?
-                    interaction.editReply({ embeds: [noDataEmbed] }) :
-                    interaction.reply({ embeds: [noDataEmbed] });
-            }
-
-            const embed = new EmbedBuilder()
-                .setColor('#7289da')
-                .setTitle(`📊 Reputation Given by ${targetUser.username}`)
-                .setThumbnail(targetUser.displayAvatarURL({ dynamic: true }))
-                .setTimestamp()
-                .setFooter({ text: `Reputation System • ${endorsedUsers.length} endorsements given` });
-
-            let description = '';
-            for (let i = 0; i < Math.min(endorsedUsers.length, 10); i++) {
-                const endorsedUser = endorsedUsers[i];
-                const endorsement = endorsedUser.reputation.endorsements.find(
-                    end => end.fromUserId === targetUser.id
-                );
-
-                // Get user from Discord cache or use stored username
-                const discordUser = interaction.client.users.cache.get(endorsedUser.userId);
-                const displayName = discordUser ? discordUser.username : endorsedUser.username;
-
-                const date = new Date(endorsement.timestamp).toLocaleDateString();
-                const message = endorsement.message ? ` - "${endorsement.message}"` : '';
-
-                description += `${i + 1}. **${displayName}** (${date})${message}\n`;
-            }
-
-            if (endorsedUsers.length > 10) {
-                description += `\n*... and ${endorsedUsers.length - 10} more endorsements*`;
-            }
-
-            embed.setDescription(description);
-
-            // Add stats
-            const totalRepGiven = endorsedUsers.length;
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-
-            const repGivenToday = endorsedUsers.filter(user => {
-                const endorsement = user.reputation.endorsements.find(
-                    end => end.fromUserId === targetUser.id
-                );
-                return new Date(endorsement.timestamp) >= today;
-            }).length;
-
-            embed.addFields({
-                name: '📈 Stats',
-                value: `Total Given: **${totalRepGiven}**\nGiven Today: **${repGivenToday}**\nDaily Limit: **${userData.reputation.repGivenToday}/3**`,
-                inline: false
-            });
-
-            return isSlashCommand ?
-                interaction.editReply({ embeds: [embed] }) :
-                interaction.reply({ embeds: [embed] });
-
+          description += `• **${targetUser.username}** - ${date}${messageText}\n`;
         } catch (error) {
-            console.error('Error in repgiven command:', error);
-            return isSlashCommand ?
-                interaction.editReply({
-                    embeds: [
-                        new EmbedBuilder()
-                            .setColor('#ff4444')
-                            .setTitle('❌ Error')
-                            .setDescription('An error occurred while fetching reputation data.')
-                            .setFooter({ text: 'Reputation System' })
-                    ]
-                }) :
-                interaction.reply({
-                    embeds: [
-                        new EmbedBuilder()
-                            .setColor('#ff4444')
-                            .setTitle('❌ Error')
-                            .setDescription('An error occurred while fetching reputation data.')
-                            .setFooter({ text: 'Reputation System' })
-                    ]
-                });
+          // User no longer exists
+          description += `• **Unknown User** - ${new Date(endorsement.timestamp).toLocaleDateString()}\n`;
         }
-    },
-}; 
+      }
+
+      if (description) {
+        embed.addFields({
+          name: "🤝 Recent Endorsements",
+          value: description,
+          inline: false,
+        });
+      }
+
+      // Statistics
+      const totalMessages = endorsements.filter((e) => e.message).length;
+      const messagePercentage =
+        totalGiven > 0 ? Math.round((totalMessages / totalGiven) * 100) : 0;
+
+      embed.addFields({
+        name: "📈 Statistics",
+        value: `Total Given: **${totalGiven}**\nWith Messages: **${totalMessages}** (${messagePercentage}%)\nUnique Users: **${endorsements.length}**`,
+        inline: false,
+      });
+
+      return await replyToInteraction(interaction, { embeds: [embed] });
+    } catch (error) {
+      const errorEmbed = handleCommandError(
+        error,
+        "repgiven command",
+        console,
+        "An error occurred while fetching reputation data.",
+      );
+      return await replyToInteraction(interaction, { embeds: [errorEmbed] });
+    }
+  },
+};

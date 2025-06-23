@@ -1,4 +1,4 @@
-const moment = require('moment');
+const moment = require("moment");
 
 /**
  * Format duration from minutes to human readable string
@@ -6,26 +6,26 @@ const moment = require('moment');
  * @returns {string} - Formatted duration string
  */
 function formatDuration(minutes) {
-    if (minutes < 1) return 'Less than 1 minute';
-    if (minutes < 60) return `${minutes} minute${minutes !== 1 ? 's' : ''}`;
+  if (minutes < 1) return "Less than 1 minute";
+  if (minutes < 60) return `${minutes} minute${minutes !== 1 ? "s" : ""}`;
 
-    const hours = Math.floor(minutes / 60);
-    const remainingMinutes = minutes % 60;
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
 
-    if (hours < 24) {
-        if (remainingMinutes === 0) {
-            return `${hours} hour${hours !== 1 ? 's' : ''}`;
-        }
-        return `${hours} hour${hours !== 1 ? 's' : ''} and ${remainingMinutes} minute${remainingMinutes !== 1 ? 's' : ''}`;
+  if (hours < 24) {
+    if (remainingMinutes === 0) {
+      return `${hours} hour${hours !== 1 ? "s" : ""}`;
     }
+    return `${hours} hour${hours !== 1 ? "s" : ""} and ${remainingMinutes} minute${remainingMinutes !== 1 ? "s" : ""}`;
+  }
 
-    const days = Math.floor(hours / 24);
-    const remainingHours = hours % 24;
+  const days = Math.floor(hours / 24);
+  const remainingHours = hours % 24;
 
-    if (remainingHours === 0) {
-        return `${days} day${days !== 1 ? 's' : ''}`;
-    }
-    return `${days} day${days !== 1 ? 's' : ''} and ${remainingHours} hour${remainingHours !== 1 ? 's' : ''}`;
+  if (remainingHours === 0) {
+    return `${days} day${days !== 1 ? "s" : ""}`;
+  }
+  return `${days} day${days !== 1 ? "s" : ""} and ${remainingHours} hour${remainingHours !== 1 ? "s" : ""}`;
 }
 
 /**
@@ -34,20 +34,24 @@ function formatDuration(minutes) {
  * @returns {number} - Duration in minutes
  */
 function parseTime(timeString) {
-    const timeRegex = /^(\d+)([mhd])$/i;
-    const match = timeString.match(timeRegex);
+  const timeRegex = /^(\d+)([mhd])$/i;
+  const match = timeString.match(timeRegex);
 
-    if (!match) return null;
+  if (!match) return null;
 
-    const value = parseInt(match[1]);
-    const unit = match[2].toLowerCase();
+  const value = parseInt(match[1]);
+  const unit = match[2].toLowerCase();
 
-    switch (unit) {
-        case 'm': return value;
-        case 'h': return value * 60;
-        case 'd': return value * 60 * 24;
-        default: return null;
-    }
+  switch (unit) {
+    case "m":
+      return value;
+    case "h":
+      return value * 60;
+    case "d":
+      return value * 60 * 24;
+    default:
+      return null;
+  }
 }
 
 /**
@@ -56,7 +60,7 @@ function parseTime(timeString) {
  * @returns {string} - Relative time string
  */
 function formatRelativeTime(timestamp) {
-    return moment(timestamp).fromNow();
+  return moment(timestamp).fromNow();
 }
 
 /**
@@ -65,7 +69,7 @@ function formatRelativeTime(timestamp) {
  * @returns {string} - Absolute time string
  */
 function formatAbsoluteTime(timestamp) {
-    return moment(timestamp).format('YYYY-MM-DD HH:mm:ss UTC');
+  return moment(timestamp).format("YYYY-MM-DD HH:mm:ss UTC");
 }
 
 /**
@@ -76,10 +80,10 @@ function formatAbsoluteTime(timestamp) {
  * @returns {string} - Progress bar string
  */
 function createProgressBar(current, total, length = 10) {
-    const progress = Math.round((current / total) * length);
-    const filled = '█'.repeat(progress);
-    const empty = '░'.repeat(length - progress);
-    return filled + empty;
+  const progress = Math.round((current / total) * length);
+  const filled = "█".repeat(progress);
+  const empty = "░".repeat(length - progress);
+  return filled + empty;
 }
 
 /**
@@ -89,8 +93,8 @@ function createProgressBar(current, total, length = 10) {
  * @returns {string} - Truncated text
  */
 function truncateText(text, maxLength) {
-    if (text.length <= maxLength) return text;
-    return text.substring(0, maxLength - 3) + '...';
+  if (text.length <= maxLength) return text;
+  return `${text.substring(0, maxLength - 3)}...`;
 }
 
 /**
@@ -99,7 +103,7 @@ function truncateText(text, maxLength) {
  * @returns {string} - Escaped text
  */
 function escapeMarkdown(text) {
-    return text.replace(/[_*~`|]/g, '\\$&');
+  return text.replace(/[_*~`|]/g, "\\$&");
 }
 
 /**
@@ -108,12 +112,13 @@ function escapeMarkdown(text) {
  * @returns {string} - Random string
  */
 function generateRandomString(length = 8) {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let result = '';
-    for (let i = 0; i < length; i++) {
-        result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
+  const chars =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let result = "";
+  for (let i = 0; i < length; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
 }
 
 /**
@@ -122,7 +127,7 @@ function generateRandomString(length = 8) {
  * @returns {boolean} - Whether the ID is valid
  */
 function isValidUserId(userId) {
-    return /^\d{17,19}$/.test(userId);
+  return /^\d{17,19}$/.test(userId);
 }
 
 /**
@@ -131,7 +136,7 @@ function isValidUserId(userId) {
  * @returns {boolean} - Whether the ID is valid
  */
 function isValidChannelId(channelId) {
-    return /^\d{17,19}$/.test(channelId);
+  return /^\d{17,19}$/.test(channelId);
 }
 
 /**
@@ -140,7 +145,7 @@ function isValidChannelId(channelId) {
  * @returns {boolean} - Whether the ID is valid
  */
 function isValidRoleId(roleId) {
-    return /^\d{17,19}$/.test(roleId);
+  return /^\d{17,19}$/.test(roleId);
 }
 
 /**
@@ -149,7 +154,7 @@ function isValidRoleId(roleId) {
  * @returns {string} - User mention string
  */
 function getUserMention(userId) {
-    return `<@${userId}>`;
+  return `<@${userId}>`;
 }
 
 /**
@@ -158,7 +163,7 @@ function getUserMention(userId) {
  * @returns {string} - Channel mention string
  */
 function getChannelMention(channelId) {
-    return `<#${channelId}>`;
+  return `<#${channelId}>`;
 }
 
 /**
@@ -167,7 +172,7 @@ function getChannelMention(channelId) {
  * @returns {string} - Role mention string
  */
 function getRoleMention(roleId) {
-    return `<@&${roleId}>`;
+  return `<@&${roleId}>`;
 }
 
 /**
@@ -176,8 +181,8 @@ function getRoleMention(roleId) {
  * @returns {string|null} - User ID or null
  */
 function extractUserId(mention) {
-    const match = mention.match(/^<@!?(\d+)>$/);
-    return match ? match[1] : null;
+  const match = mention.match(/^<@!?(\d+)>$/);
+  return match ? match[1] : null;
 }
 
 /**
@@ -186,8 +191,8 @@ function extractUserId(mention) {
  * @returns {string|null} - Channel ID or null
  */
 function extractChannelId(mention) {
-    const match = mention.match(/^<#(\d+)>$/);
-    return match ? match[1] : null;
+  const match = mention.match(/^<#(\d+)>$/);
+  return match ? match[1] : null;
 }
 
 /**
@@ -196,8 +201,8 @@ function extractChannelId(mention) {
  * @returns {string|null} - Role ID or null
  */
 function extractRoleId(mention) {
-    const match = mention.match(/^<@&(\d+)>$/);
-    return match ? match[1] : null;
+  const match = mention.match(/^<@&(\d+)>$/);
+  return match ? match[1] : null;
 }
 
 /**
@@ -206,7 +211,7 @@ function extractRoleId(mention) {
  * @returns {string} - Capitalized text
  */
 function capitalizeWords(text) {
-    return text.replace(/\b\w/g, l => l.toUpperCase());
+  return text.replace(/\b\w/g, (l) => l.toUpperCase());
 }
 
 /**
@@ -216,31 +221,19 @@ function capitalizeWords(text) {
  * @returns {boolean} - Whether text contains profanity.
  */
 function containsProfanity(text, bannedWords) {
-    if (bannedWords.length === 0) return false;
+  if (bannedWords.length === 0) return false;
 
-    // Create a single regex to match any of the banned words as whole words.
-    // The `\b` is a word boundary. This prevents matching "ass" in "class".
-    // We escape special regex characters in the words themselves.
-    const regex = new RegExp(`\\b(${bannedWords.map(word =>
-        word.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')
-    ).join('|')})\\b`, 'i');
+  // Create a single regex to match any of the banned words as whole words.
+  // The `\b` is a word boundary. This prevents matching "ass" in "class".
+  // We escape special regex characters in the words themselves.
+  const regex = new RegExp(
+    `\\b(${bannedWords
+      .map((word) => word.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&"))
+      .join("|")})\\b`,
+    "i",
+  );
 
-    return regex.test(text);
-}
-
-/**
- * Safe error handler for async operations
- * @param {Function} fn - Async function to execute
- * @param {string} context - Context for error logging
- * @returns {Promise<any>} - Function result or null on error
- */
-async function safeExecute(fn, context = 'Unknown') {
-    try {
-        return await fn();
-    } catch (error) {
-        console.error(`Error in ${context}:`, error);
-        return null;
-    }
+  return regex.test(text);
 }
 
 /**
@@ -250,10 +243,10 @@ async function safeExecute(fn, context = 'Unknown') {
  * @returns {string|null} - Sanitized input or null if invalid
  */
 function sanitizeInput(input, maxLength = 1000) {
-    if (!input || typeof input !== 'string') return null;
+  if (!input || typeof input !== "string") return null;
 
-    const sanitized = input.trim().substring(0, maxLength);
-    return sanitized.length > 0 ? sanitized : null;
+  const sanitized = input.trim().substring(0, maxLength);
+  return sanitized.length > 0 ? sanitized : null;
 }
 
 /**
@@ -262,7 +255,7 @@ function sanitizeInput(input, maxLength = 1000) {
  * @returns {string} - Formatted number
  */
 function formatNumber(num) {
-    return num.toLocaleString();
+  return num.toLocaleString();
 }
 
 /**
@@ -273,32 +266,246 @@ function formatNumber(num) {
  * @returns {string} - Formatted percentage
  */
 function calculatePercentage(part, total, decimals = 1) {
-    if (total === 0) return '0%';
-    return ((part / total) * 100).toFixed(decimals) + '%';
+  if (total === 0) return "0%";
+  return `${((part / total) * 100).toFixed(decimals)}%`;
+}
+
+/**
+ * Create a standard error embed
+ * @param {string} title - Error title
+ * @param {string} description - Error description
+ * @param {string} footer - Footer text
+ * @returns {EmbedBuilder} - Error embed
+ */
+function createErrorEmbed(
+  title = "❌ Error",
+  description = "An error occurred.",
+  footer = "System Error",
+) {
+  const { EmbedBuilder } = require("discord.js");
+  return new EmbedBuilder()
+    .setColor("#ff4444")
+    .setTitle(title)
+    .setDescription(description)
+    .setFooter({ text: footer })
+    .setTimestamp();
+}
+
+/**
+ * Create a standard success embed
+ * @param {string} title - Success title
+ * @param {string} description - Success description
+ * @param {string} footer - Footer text
+ * @returns {EmbedBuilder} - Success embed
+ */
+function createSuccessEmbed(
+  title = "✅ Success",
+  description = "Operation completed successfully.",
+  footer = "System",
+) {
+  const { EmbedBuilder } = require("discord.js");
+  return new EmbedBuilder()
+    .setColor("#00ff88")
+    .setTitle(title)
+    .setDescription(description)
+    .setFooter({ text: footer })
+    .setTimestamp();
+}
+
+/**
+ * Create a standard info embed
+ * @param {string} title - Info title
+ * @param {string} description - Info description
+ * @param {string} footer - Footer text
+ * @returns {EmbedBuilder} - Info embed
+ */
+function createInfoEmbed(
+  title = "ℹ️ Information",
+  description = "Information message.",
+  footer = "System",
+) {
+  const { EmbedBuilder } = require("discord.js");
+  return new EmbedBuilder()
+    .setColor("#0099ff")
+    .setTitle(title)
+    .setDescription(description)
+    .setFooter({ text: footer })
+    .setTimestamp();
+}
+
+/**
+ * Create a standard warning embed
+ * @param {string} title - Warning title
+ * @param {string} description - Warning description
+ * @param {string} footer - Footer text
+ * @returns {EmbedBuilder} - Warning embed
+ */
+function createWarningEmbed(
+  title = "⚠️ Warning",
+  description = "Warning message.",
+  footer = "System",
+) {
+  const { EmbedBuilder } = require("discord.js");
+  return new EmbedBuilder()
+    .setColor("#ff8800")
+    .setTitle(title)
+    .setDescription(description)
+    .setFooter({ text: footer })
+    .setTimestamp();
+}
+
+/**
+ * Standard error handler for commands
+ * @param {Error} error - The error object
+ * @param {string} context - Error context (e.g., 'command name')
+ * @param {Object} logger - Logger instance
+ * @param {string} userMessage - Message to send to user
+ * @returns {EmbedBuilder} - Error embed
+ */
+function handleCommandError(
+  error,
+  context,
+  logger,
+  userMessage = "An error occurred while processing your request.",
+) {
+  logger.error(`Error in ${context}:`, error);
+  return createErrorEmbed("❌ Error", userMessage, context);
+}
+
+/**
+ * Check if interaction is a slash command
+ * @param {Object} interaction - Discord interaction object
+ * @returns {boolean} - Whether it's a slash command
+ */
+function isSlashCommand(interaction) {
+  return interaction.options !== undefined;
+}
+
+/**
+ * Reply to interaction (handles both slash and prefix commands)
+ * @param {Object} interaction - Discord interaction object
+ * @param {Object} content - Content to send
+ * @returns {Promise} - Reply promise
+ */
+async function replyToInteraction(interaction, content) {
+  if (isSlashCommand(interaction)) {
+    return interaction.editReply(content);
+  }
+  return interaction.reply(content);
+}
+
+/**
+ * Defer reply for slash commands
+ * @param {Object} interaction - Discord interaction object
+ * @returns {Promise} - Defer promise
+ */
+async function deferInteraction(interaction) {
+  if (isSlashCommand(interaction)) {
+    return interaction.deferReply();
+  }
+}
+
+/**
+ * Log moderation action to designated channel
+ * @param {Object} guild - Discord guild object
+ * @param {Object} data - Moderation data
+ * @param {string} data.action - Action type (WARN, KICK, BAN)
+ * @param {Object} data.target - Target user object
+ * @param {Object} data.moderator - Moderator user object
+ * @param {string} data.reason - Reason for action
+ * @param {Object} data.channel - Channel where action occurred (optional)
+ * @param {number} data.duration - Duration in minutes (optional)
+ * @returns {Promise<void>}
+ */
+async function logModerationAction(guild, data) {
+  try {
+    const Guild = require("../models/Guild");
+    const guildSettings = await Guild.findOne({ guildId: guild.id });
+    if (!guildSettings?.moderation.logChannelId) return;
+
+    const logChannel = guild.channels.cache.get(
+      guildSettings.moderation.logChannelId,
+    );
+    if (!logChannel) return;
+
+    const { EmbedBuilder } = require("discord.js");
+    const colors = {
+      WARN: 0xffa500,
+      KICK: 0xff470f,
+      BAN: 0xdd2e44,
+    };
+
+    const embed = new EmbedBuilder()
+      .setColor(colors[data.action] || 0xff0000)
+      .setTitle(`🛡️ Moderation Log: User ${data.action}`)
+      .addFields(
+        {
+          name: "User",
+          value: `${data.target.tag} (${data.target.id})`,
+          inline: true,
+        },
+        {
+          name: "Moderator",
+          value: `${data.moderator.tag} (${data.moderator.id})`,
+          inline: true,
+        },
+        { name: "Reason", value: data.reason || "No reason provided" },
+      )
+      .setTimestamp();
+
+    if (data.channel) {
+      embed.addFields({
+        name: "Channel",
+        value: data.channel.toString(),
+        inline: true,
+      });
+    }
+
+    if (data.duration) {
+      embed.addFields({
+        name: "Duration",
+        value: `${data.duration} minutes`,
+        inline: true,
+      });
+    }
+
+    await logChannel.send({ embeds: [embed] });
+  } catch (error) {
+    const logger = require("../config/logger");
+    logger.error("Error logging moderation action:", error);
+  }
 }
 
 module.exports = {
-    formatDuration,
-    parseTime,
-    formatRelativeTime,
-    formatAbsoluteTime,
-    createProgressBar,
-    truncateText,
-    escapeMarkdown,
-    generateRandomString,
-    isValidUserId,
-    isValidChannelId,
-    isValidRoleId,
-    getUserMention,
-    getChannelMention,
-    getRoleMention,
-    extractUserId,
-    extractChannelId,
-    extractRoleId,
-    capitalizeWords,
-    containsProfanity,
-    safeExecute,
-    sanitizeInput,
-    formatNumber,
-    calculatePercentage
-}; 
+  formatDuration,
+  parseTime,
+  formatRelativeTime,
+  formatAbsoluteTime,
+  createProgressBar,
+  truncateText,
+  escapeMarkdown,
+  generateRandomString,
+  isValidUserId,
+  isValidChannelId,
+  isValidRoleId,
+  getUserMention,
+  getChannelMention,
+  getRoleMention,
+  extractUserId,
+  extractChannelId,
+  extractRoleId,
+  capitalizeWords,
+  containsProfanity,
+  sanitizeInput,
+  formatNumber,
+  calculatePercentage,
+  createErrorEmbed,
+  createSuccessEmbed,
+  createInfoEmbed,
+  createWarningEmbed,
+  handleCommandError,
+  isSlashCommand,
+  replyToInteraction,
+  deferInteraction,
+  logModerationAction,
+};
