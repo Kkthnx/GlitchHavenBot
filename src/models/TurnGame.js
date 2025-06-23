@@ -244,4 +244,4 @@ turnGameSchema.pre('save', function (next) {
     next();
 });
 
-module.exports = mongoose.model('TurnGame', turnGameSchema); 
+module.exports = mongoose.models.TurnGame || mongoose.model('TurnGame', turnGameSchema); 

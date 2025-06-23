@@ -451,4 +451,4 @@ userSchema.statics.bulkUpdateReputation = async function (updates) {
     return this.bulkWrite(bulkOps, { ordered: false });
 };
 
-module.exports = mongoose.model('User', userSchema);
+module.exports = mongoose.models.User || mongoose.model('User', userSchema);

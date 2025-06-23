@@ -224,4 +224,4 @@ petSchema.pre('save', function (next) {
     next();
 });
 
-module.exports = mongoose.model('Pet', petSchema); 
+module.exports = mongoose.models.Pet || mongoose.model('Pet', petSchema); 

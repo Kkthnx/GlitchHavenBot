@@ -179,4 +179,4 @@ guildSchema.statics.getModerationSettings = async function (guildId) {
     return guild ? guild.moderation : null;
 };
 
-module.exports = mongoose.model('Guild', guildSchema); 
+module.exports = mongoose.models.Guild || mongoose.model('Guild', guildSchema); 

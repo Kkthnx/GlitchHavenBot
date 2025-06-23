@@ -125,4 +125,4 @@ adventureSchema.statics.getHistory = function (guildId, limit = 10) {
         .limit(limit);
 };
 
-module.exports = mongoose.model('Adventure', adventureSchema); 
+module.exports = mongoose.models.Adventure || mongoose.model('Adventure', adventureSchema); 

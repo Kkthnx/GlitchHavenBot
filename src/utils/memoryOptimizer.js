@@ -4,7 +4,8 @@ class MemoryOptimizer {
     constructor() {
         this.lastGcTime = 0;
         this.gcInterval = 5 * 60 * 1000; // 5 minutes
-        this.memoryThreshold = 0.8; // 80% of heap
+        this.memoryThreshold = 0.85; // Increased from 0.8 to 0.85 (85% of heap)
+        this.minHeapSize = 50; // Minimum heap size in MB before warnings
         this.startMonitoring();
     }
 
@@ -14,7 +15,7 @@ class MemoryOptimizer {
     startMonitoring() {
         setInterval(() => {
             this.checkMemoryUsage();
-        }, 30000); // Check every 30 seconds
+        }, 60000); // Check every 60 seconds instead of 30
     }
 
     /**
@@ -23,15 +24,17 @@ class MemoryOptimizer {
     checkMemoryUsage() {
         const memUsage = process.memoryUsage();
         const heapUsageRatio = memUsage.heapUsed / memUsage.heapTotal;
+        const heapSizeMB = memUsage.heapTotal / 1024 / 1024;
 
-        if (heapUsageRatio > this.memoryThreshold) {
-            logger.warn(`High memory usage detected: ${(heapUsageRatio * 100).toFixed(1)}%`);
+        // Only warn if heap size is significant and usage is high
+        if (heapSizeMB > this.minHeapSize && heapUsageRatio > this.memoryThreshold) {
+            logger.warn(`High memory usage detected: ${(heapUsageRatio * 100).toFixed(1)}% (${heapSizeMB.toFixed(1)}MB heap)`);
             this.optimizeMemory();
         }
 
-        // Log memory usage periodically
+        // Log memory usage periodically (less frequent)
         if (Date.now() - this.lastGcTime > this.gcInterval) {
-            logger.info(`Memory usage: ${(memUsage.heapUsed / 1024 / 1024).toFixed(2)}MB / ${(memUsage.heapTotal / 1024 / 1024).toFixed(2)}MB`);
+            logger.info(`Memory usage: ${(memUsage.heapUsed / 1024 / 1024).toFixed(2)}MB / ${(memUsage.heapTotal / 1024 / 1024).toFixed(2)}MB (${(heapUsageRatio * 100).toFixed(1)}%)`);
         }
     }
 

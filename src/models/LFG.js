@@ -19,4 +19,4 @@ const lfgSchema = new mongoose.Schema({
 lfgSchema.index({ guildId: 1, game: 1 });
 lfgSchema.index({ creatorId: 1 });
 
-module.exports = mongoose.model('LFG', lfgSchema); 
+module.exports = mongoose.models.LFG || mongoose.model('LFG', lfgSchema); 

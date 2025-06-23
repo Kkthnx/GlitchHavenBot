@@ -4,8 +4,8 @@
     "description": "An advanced Discord bot with moderation, welcome features, games, and user assistance",
     "main": "src/index.js",
     "scripts": {
-        "start": "node src/index.js",
-        "dev": "nodemon src/index.js",
+        "start": "node --max-old-space-size=512 --expose-gc src/index.js",
+        "dev": "nodemon --max-old-space-size=512 --expose-gc src/index.js",
         "lint": "eslint src/",
         "test": "jest",
         "setup": "node scripts/setup.js",

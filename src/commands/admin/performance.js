@@ -3,6 +3,8 @@ const performanceMonitor = require('../../utils/performance');
 const databaseService = require('../../utils/databaseService');
 const { guildCache, userCache, leaderboardCache, gameCache } = require('../../utils/cache');
 const logger = require('../../config/logger');
+const memoryOptimizer = require('../../utils/memoryOptimizer');
+const cleanupUtility = require('../../utils/cleanup');
 
 module.exports = {
     name: 'performance',
@@ -15,137 +17,130 @@ module.exports = {
 
     data: new SlashCommandBuilder()
         .setName('performance')
-        .setDescription('View bot performance metrics and system statistics')
-        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+        .setDescription('View bot performance statistics and memory usage')
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('memory')
+                .setDescription('View detailed memory usage statistics'))
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('cleanup')
+                .setDescription('Force a cleanup operation'))
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('optimize')
+                .setDescription('Force memory optimization')),
 
-    async execute(interaction, args, client) {
-        const isSlashCommand = interaction.options !== undefined;
-
-        if (isSlashCommand) {
-            await interaction.deferReply();
+    async execute(interaction) {
+        // Check if user has admin permissions
+        if (!interaction.member.permissions.has('Administrator')) {
+            return interaction.reply({
+                content: '❌ You need Administrator permissions to use this command.',
+                ephemeral: true
+            });
         }
 
-        try {
-            // Get performance metrics
-            const perfStats = performanceMonitor.getStats();
-            const dbStats = await databaseService.getDatabaseStats();
+        const subcommand = interaction.options.getSubcommand();
 
-            const embed = new EmbedBuilder()
-                .setColor('#00ff88')
-                .setTitle('📊 Bot Performance Metrics')
-                .setThumbnail(client.user.displayAvatarURL({ dynamic: true }))
-                .setTimestamp()
-                .setFooter({ text: 'Performance Monitor' });
-
-            // System Overview
-            embed.addFields({
-                name: '🖥️ System Overview',
-                value: `**Uptime:** ${perfStats.uptime.formatted}\n` +
-                    `**Memory Used:** ${perfStats.memory.heapUsed}MB / ${perfStats.memory.heapTotal}MB\n` +
-                    `**External Memory:** ${perfStats.memory.external}MB`,
-                inline: false
-            });
-
-            // Database Performance
-            embed.addFields({
-                name: '🗄️ Database Performance',
-                value: `**Total Queries:** ${perfStats.queries.total}\n` +
-                    `**Slow Queries:** ${perfStats.queries.slow}\n` +
-                    `**Avg Query Time:** ${perfStats.queries.averageTime.toFixed(2)}ms\n` +
-                    `**P95 Query Time:** ${perfStats.performance.queryPercentiles.p95}ms`,
-                inline: true
-            });
-
-            // Command Performance
-            embed.addFields({
-                name: '⚡ Command Performance',
-                value: `**Total Commands:** ${perfStats.commands.total}\n` +
-                    `**Errors:** ${perfStats.commands.errors}\n` +
-                    `**Avg Command Time:** ${perfStats.commands.averageTime.toFixed(2)}ms\n` +
-                    `**P95 Command Time:** ${perfStats.performance.commandPercentiles.p95}ms`,
-                inline: true
-            });
-
-            // Cache Performance
-            embed.addFields({
-                name: '💾 Cache Performance',
-                value: `**Hit Rate:** ${perfStats.cache.hitRate.toFixed(1)}%\n` +
-                    `**Hits:** ${perfStats.cache.hits}\n` +
-                    `**Misses:** ${perfStats.cache.misses}`,
-                inline: true
-            });
-
-            // Database Collections
-            if (dbStats.collections) {
-                let collectionsText = '';
-                for (const [collection, count] of Object.entries(dbStats.collections)) {
-                    collectionsText += `**${collection}:** ${count.toLocaleString()}\n`;
-                }
-
-                embed.addFields({
-                    name: '📚 Database Collections',
-                    value: collectionsText,
-                    inline: false
-                });
-            }
-
-            // Cache Details
-            const cacheStats = dbStats.cache || {};
-            let cacheDetails = '';
-            for (const [cacheName, stats] of Object.entries(cacheStats)) {
-                if (stats && typeof stats === 'object') {
-                    cacheDetails += `**${cacheName}:** ${stats.hitRate} (${stats.size} items)\n`;
-                }
-            }
-
-            if (cacheDetails) {
-                embed.addFields({
-                    name: '🗂️ Cache Details',
-                    value: cacheDetails,
-                    inline: false
-                });
-            }
-
-            // Performance Alerts
-            const alerts = [];
-            if (perfStats.queries.slow > 0) {
-                alerts.push('⚠️ Slow database queries detected');
-            }
-            if (perfStats.commands.errors > 0) {
-                alerts.push('❌ Command errors detected');
-            }
-            if (perfStats.cache.hitRate < 50) {
-                alerts.push('💾 Low cache hit rate');
-            }
-            if (perfStats.memory.heapUsed > perfStats.memory.heapTotal * 0.8) {
-                alerts.push('🧠 High memory usage');
-            }
-
-            if (alerts.length > 0) {
-                embed.addFields({
-                    name: '🚨 Performance Alerts',
-                    value: alerts.join('\n'),
-                    inline: false
-                });
-            }
-
-            return isSlashCommand ?
-                interaction.editReply({ embeds: [embed] }) :
-                interaction.reply({ embeds: [embed] });
-
-        } catch (error) {
-            console.error('Error in performance command:', error);
-            const errorEmbed = new EmbedBuilder()
-                .setColor('#ff4444')
-                .setTitle('❌ Error')
-                .setDescription('An error occurred while fetching performance metrics.')
-                .setFooter({ text: 'Performance Monitor' });
-
-            return isSlashCommand ?
-                interaction.editReply({ embeds: [errorEmbed] }) :
-                interaction.reply({ embeds: [errorEmbed] });
+        switch (subcommand) {
+            case 'memory':
+                await this.showMemoryStats(interaction);
+                break;
+            case 'cleanup':
+                await this.forceCleanup(interaction);
+                break;
+            case 'optimize':
+                await this.forceOptimize(interaction);
+                break;
         }
     },
+
+    async showMemoryStats(interaction) {
+        const memStats = memoryOptimizer.getMemoryStats();
+        const cleanupStats = cleanupUtility.getCleanupStats();
+
+        const embed = new EmbedBuilder()
+            .setTitle('🤖 Bot Performance Statistics')
+            .setColor('#00ff00')
+            .addFields(
+                {
+                    name: '💾 Memory Usage',
+                    value: `**Heap Used:** ${memStats.heapUsed}MB\n**Heap Total:** ${memStats.heapTotal}MB\n**Usage Ratio:** ${memStats.usageRatio}%\n**External:** ${memStats.external}MB\n**RSS:** ${memStats.rss}MB`,
+                    inline: false
+                },
+                {
+                    name: '🧹 Cleanup Status',
+                    value: `**Last Cleanup:** ${cleanupStats.hoursSinceLastCleanup} hours ago\n**Next Scheduled:** ${Math.max(0, 24 - cleanupStats.hoursSinceLastCleanup)} hours`,
+                    inline: false
+                },
+                {
+                    name: '⚡ System Info',
+                    value: `**Node.js Version:** ${process.version}\n**Platform:** ${process.platform}\n**Architecture:** ${process.arch}\n**Uptime:** ${Math.floor(process.uptime() / 3600)}h ${Math.floor((process.uptime() % 3600) / 60)}m`,
+                    inline: false
+                }
+            )
+            .setTimestamp()
+            .setFooter({ text: 'Gridkeeper Bot Performance Monitor' });
+
+        await interaction.reply({ embeds: [embed] });
+    },
+
+    async forceCleanup(interaction) {
+        await interaction.deferReply();
+
+        try {
+            await cleanupUtility.performFullCleanup();
+
+            const embed = new EmbedBuilder()
+                .setTitle('🧹 Cleanup Completed')
+                .setDescription('Forced cleanup operation completed successfully.')
+                .setColor('#00ff00')
+                .setTimestamp();
+
+            await interaction.editReply({ embeds: [embed] });
+        } catch (error) {
+            const embed = new EmbedBuilder()
+                .setTitle('❌ Cleanup Failed')
+                .setDescription(`Error during cleanup: ${error.message}`)
+                .setColor('#ff0000')
+                .setTimestamp();
+
+            await interaction.editReply({ embeds: [embed] });
+        }
+    },
+
+    async forceOptimize(interaction) {
+        await interaction.deferReply();
+
+        try {
+            memoryOptimizer.forceOptimization();
+
+            const memStats = memoryOptimizer.getMemoryStats();
+
+            const embed = new EmbedBuilder()
+                .setTitle('⚡ Memory Optimization Completed')
+                .setDescription(`Memory optimization completed successfully.`)
+                .addFields(
+                    {
+                        name: 'Current Memory Usage',
+                        value: `**Heap Used:** ${memStats.heapUsed}MB\n**Heap Total:** ${memStats.heapTotal}MB\n**Usage Ratio:** ${memStats.usageRatio}%`,
+                        inline: false
+                    }
+                )
+                .setColor('#00ff00')
+                .setTimestamp();
+
+            await interaction.editReply({ embeds: [embed] });
+        } catch (error) {
+            const embed = new EmbedBuilder()
+                .setTitle('❌ Optimization Failed')
+                .setDescription(`Error during optimization: ${error.message}`)
+                .setColor('#ff0000')
+                .setTimestamp();
+
+            await interaction.editReply({ embeds: [embed] });
+        }
+    }
 };
 
 async function getCacheStats() {
