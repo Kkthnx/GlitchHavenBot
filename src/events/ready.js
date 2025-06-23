@@ -7,8 +7,20 @@ module.exports = {
     async execute(client) {
         logger.info(`Logged in as ${client.user.tag}`);
 
+        // Test presence intent
+        const guild = client.guilds.cache.first();
+        if (guild) {
+            logger.info(`Initialized guild: ${guild.name} (${guild.id})`);
+        }
+
         // Set bot status
-        client.user.setActivity('!help for commands', { type: 'PLAYING' });
+        client.user.setPresence({
+            activities: [{
+                name: '!help for commands',
+                type: 3 // Watching
+            }],
+            status: 'online'
+        });
 
         // Initialize guilds in database
         try {
