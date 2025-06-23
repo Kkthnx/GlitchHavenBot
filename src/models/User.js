@@ -18,6 +18,7 @@ const userSchema = new mongoose.Schema({
         default: '0'
     },
     avatar: String,
+    bio: { type: String, maxlength: 250 },
     joinedAt: {
         type: Date,
         default: Date.now
@@ -41,7 +42,8 @@ const userSchema = new mongoose.Schema({
         levelUpHistory: [{
             level: Number,
             timestamp: { type: Date, default: Date.now }
-        }]
+        }],
+        lastMessageTimestamp: { type: Date, default: 0 }
     },
 
     // Game statistics
@@ -99,7 +101,17 @@ const userSchema = new mongoose.Schema({
     // User preferences
     preferences: {
         welcomeMessages: { type: Boolean, default: true },
-        gameNotifications: { type: Boolean, default: true }
+        gameNotifications: { type: Boolean, default: true },
+        rankCardBackground: {
+            type: String,
+            default: 'default'
+        }
+    },
+
+    // Economy
+    economy: {
+        wallet: { type: Number, default: 0 },
+        bank: { type: Number, default: 0 },
     }
 }, {
     timestamps: true
@@ -113,6 +125,21 @@ userSchema.index({ 'gameStats.coinFlips.total': -1 });
 userSchema.index({ 'gameStats.coinFlips.bestStreak': -1 });
 userSchema.index({ 'gameStats.rps.wins': -1 });
 userSchema.index({ birthday: 1 }, { sparse: true });
+
+// Additional performance indexes
+userSchema.index({ guildId: 1, 'leveling.level': -1, 'leveling.xp': -1 });
+userSchema.index({ guildId: 1, 'gameStats.coinFlips.wins': -1 });
+userSchema.index({ guildId: 1, 'gameStats.rps.wins': -1 });
+userSchema.index({ 'leveling.lastMessageTimestamp': 1 });
+userSchema.index({ 'gameStats.lastFlip': 1 });
+userSchema.index({ 'moderation.warnings.active': 1 });
+userSchema.index({ 'moderation.mutes.active': 1 });
+userSchema.index({ 'moderation.bans.active': 1 });
+
+// Compound indexes for complex queries
+userSchema.index({ guildId: 1, 'leveling.level': -1 });
+userSchema.index({ guildId: 1, 'gameStats.coinFlips.total': -1 });
+userSchema.index({ guildId: 1, 'gameStats.rps.total': -1 });
 
 // Level calculation function
 function calculateLevel(xp) {
@@ -288,4 +315,4 @@ userSchema.statics.getLevelLeaderboard = async function (guildId, limit = 10) {
         .limit(limit);
 };
 
-module.exports = mongoose.model('User', userSchema); 
+module.exports = mongoose.model('User', userSchema);

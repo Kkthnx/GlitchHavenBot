@@ -1,5 +1,5 @@
 {
-    "name": "glitch-haven-bot",
+    "name": "gridkeeper-bot",
     "version": "1.0.0",
     "description": "An advanced Discord bot with moderation, welcome features, games, and user assistance",
     "main": "src/index.js",
@@ -9,7 +9,8 @@
         "lint": "eslint src/",
         "test": "jest",
         "setup": "node scripts/setup.js",
-        "backup": "node scripts/backup.js"
+        "backup": "node scripts/backup.js",
+        "optimize": "node scripts/optimizeDatabase.js"
     },
     "keywords": [
         "discord",
@@ -23,9 +24,11 @@
     "dependencies": {
         "@twurple/api": "^7.3.0",
         "@twurple/auth": "^7.3.0",
+        "canvacord": "^6.0.2",
+        "canvas": "^3.1.1",
         "discord.js": "^14.14.1",
         "dotenv": "^16.3.1",
-        "jimp": "^1.6.0",
+        "jimp": "^0.22.10",
         "moment": "^2.29.4",
         "mongoose": "^8.0.3",
         "node-cron": "^3.0.3",

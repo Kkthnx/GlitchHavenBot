@@ -3,7 +3,7 @@ const User = require('../../models/User');
 const Guild = require('../../models/Guild');
 const { hasModeratorPermissions, canModerateUser } = require('../../utils/permissions');
 const { parseTime } = require('../../utils/helpers');
-const logger = require('../../utils/logger');
+const logger = require('../../config/logger');
 
 module.exports = {
     name: 'ban',

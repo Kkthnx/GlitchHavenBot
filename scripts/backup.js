@@ -19,7 +19,7 @@ async function backup() {
     const backupFile = path.join(BACKUP_DIR, `backup-${timestamp}.json`);
 
     // Parse MongoDB URI to get database name
-    const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/glitch-haven-bot';
+    const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/gridkeeper-bot';
     const dbName = mongoUri.split('/').pop().split('?')[0];
 
     console.log(`📊 Backing up database: ${dbName}`);

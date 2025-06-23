@@ -1,7 +1,7 @@
 const { EmbedBuilder } = require('discord.js');
 const User = require('../../models/User');
 const { formatRelativeTime, formatAbsoluteTime } = require('../../utils/helpers');
-const logger = require('../../utils/logger');
+const logger = require('../../config/logger');
 
 module.exports = {
     name: 'userinfo',

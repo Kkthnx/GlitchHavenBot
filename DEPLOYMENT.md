@@ -1,6 +1,6 @@
 # Deployment Guide
 
-This guide covers deploying your GlitchHaven Bot to various hosting platforms.
+This guide covers deploying your Gridkeeper Bot to various hosting platforms.
 
 ## 🚀 Quick Deploy Options
 
@@ -67,7 +67,7 @@ This guide covers deploying your GlitchHaven Bot to various hosting platforms.
 ```bash
 # Install MongoDB locally
 # Update MONGODB_URI in .env to:
-MONGODB_URI=mongodb://localhost:27017/glitch-haven-bot
+MONGODB_URI=mongodb://localhost:27017/gridkeeper-bot
 ```
 
 ## 🔧 Environment Variables

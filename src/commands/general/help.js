@@ -63,7 +63,7 @@ module.exports = {
 
         const helpEmbed = new EmbedBuilder()
             .setColor(0x0099FF)
-            .setTitle('🤖 GlitchHaven Bot Commands')
+            .setTitle('🤖 Gridkeeper Bot Commands')
             .setDescription(`Use \`${client.config.prefix}help <command>\` for detailed information about a specific command.`)
             .setThumbnail(client.user.displayAvatarURL())
             .setFooter({ text: `Total Commands: ${commands.size} | Prefix: ${client.config.prefix}` })
@@ -89,7 +89,7 @@ module.exports = {
             name: '📋 Quick Info',
             value: [
                 '• **Moderation**: Manage your server with powerful moderation tools',
-                '• **Games**: Have fun with coin flipping and other games',
+                '• **Games**: Have fun with coin flipping, adventures, pets, and turn-based games',
                 '• **Welcome**: Customize welcome messages and auto-roles',
                 '• **Utility**: Useful commands for server management'
             ].join('\n'),
@@ -134,6 +134,9 @@ function getCommandCategory(commandName) {
         'leaderboard': 'Games',
         'level': 'Games',
         'levelboard': 'Games',
+        'adventure': 'Games',
+        'pet': 'Games',
+        'turn': 'Games',
 
         // Welcome commands
         'welcome': 'Welcome',

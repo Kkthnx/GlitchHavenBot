@@ -1,27 +1,11 @@
 const { Collection } = require('discord.js');
 const logger = require('../config/logger');
-const User = require('../models/User');
-const Guild = require('../models/Guild');
+const databaseService = require('../utils/databaseService');
 const { hasModeratorPermissions, canModerateUser } = require('../utils/permissions');
 const { containsProfanity } = require('../utils/helpers');
 
 // Cooldown collection for XP (prevent spam)
 const xpCooldowns = new Collection();
-const guildCache = new Map();
-
-async function getGuildSettings(guildId) {
-    if (guildCache.has(guildId)) {
-        return guildCache.get(guildId);
-    }
-
-    const guildSettings = await Guild.findOne({ guildId: guildId }).lean();
-    if (guildSettings) {
-        guildCache.set(guildId, guildSettings);
-        // Cache for 5 minutes
-        setTimeout(() => guildCache.delete(guildId), 5 * 60 * 1000);
-    }
-    return guildSettings;
-}
 
 module.exports = {
     name: 'messageCreate',
@@ -30,9 +14,10 @@ module.exports = {
         if (message.author.bot || !message.guild) return;
 
         try {
+            // Use database service for optimized queries with caching
             const [guildSettings, userData] = await Promise.all([
-                getGuildSettings(message.guild.id),
-                User.findOrCreate(message.author.id, message.guild.id, {
+                databaseService.getGuildSettings(message.guild.id),
+                databaseService.getOrCreateUser(message.author.id, message.guild.id, {
                     username: message.author.username,
                     discriminator: message.author.discriminator,
                     avatar: message.author.avatar
@@ -121,7 +106,7 @@ async function handleCommands(message, client, prefix) {
     }
     const now = Date.now();
     const timestamps = cooldowns.get(command.name);
-    const cooldownAmount = (command.cooldown || 3) * 1000;
+    const cooldownAmount = (command.cooldown || 5) * 1000;
 
     if (timestamps.has(message.author.id)) {
         const expirationTime = timestamps.get(message.author.id) + cooldownAmount;

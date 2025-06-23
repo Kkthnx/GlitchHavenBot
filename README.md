@@ -1,4 +1,4 @@
-# GlitchHaven Bot
+# Gridkeeper Bot
 
 An advanced Discord bot with comprehensive moderation, welcome features, games, and user assistance capabilities.
 
@@ -39,7 +39,7 @@ An advanced Discord bot with comprehensive moderation, welcome features, games, 
 
    ```bash
    git clone <repository-url>
-   cd GlitchHavenBot
+   cd GridkeeperBot
    ```
 
 2. **Run the setup script**
@@ -76,7 +76,7 @@ An advanced Discord bot with comprehensive moderation, welcome features, games, 
 
    ```bash
    git clone <repository-url>
-   cd GlitchHavenBot
+   cd GridkeeperBot
    ```
 
 2. **Install dependencies**

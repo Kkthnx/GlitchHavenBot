@@ -1,13 +1,13 @@
 const { EmbedBuilder } = require('discord.js');
 const User = require('../../models/User');
-const logger = require('../../utils/logger');
+const logger = require('../../config/logger');
 
 module.exports = {
     name: 'setbirthday',
     aliases: ['setbday', 'mybirthday'],
     description: 'Sets your birthday to be announced in the server.',
     usage: 'setbirthday <MM/DD>',
-    cooldown: 60,
+    cooldown: 10,
     guildOnly: true,
     async execute(message, args, client) {
         if (!args[0]) {

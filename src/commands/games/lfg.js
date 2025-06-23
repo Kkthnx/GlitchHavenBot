@@ -1,13 +1,13 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const LFG = require('../../models/LFG');
-const logger = require('../../utils/logger');
+const logger = require('../../config/logger');
 
 module.exports = {
     name: 'lfg',
     aliases: ['lookingforgroup'],
     description: 'Create a Looking-For-Group post to find teammates.',
     usage: 'lfg <slots> <game> <description>',
-    cooldown: 60, // 1 minute cooldown to prevent spam
+    cooldown: 10, // Reduced from 60 to 10 seconds
     guildOnly: true,
     async execute(message, args, client) {
         if (args.length < 3) {

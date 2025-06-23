@@ -1,26 +1,32 @@
-const { AttachmentBuilder } = require('discord.js');
+const { AttachmentBuilder, EmbedBuilder } = require('discord.js');
 const User = require('../../models/User');
 const { createRankCard } = require('../../utils/rankCardGenerator');
-const logger = require('../../utils/logger');
+const logger = require('../../config/logger');
 
 module.exports = {
     name: 'level',
     aliases: ['rank', 'xp'],
     description: 'Displays your level and XP progress as a graphical rank card.',
     usage: 'level [@user]',
-    cooldown: 15, // Increased cooldown due to image generation
+    cooldown: 10, // Reduced from 15 to 10 seconds
     guildOnly: true,
     async execute(message, args, client) {
         try {
             await message.channel.sendTyping();
 
-            const targetUser = message.mentions.users.first() || message.author;
+            const targetMember = message.mentions.members.first() || message.member;
+            const targetUser = targetMember.user;
 
-            const dbUser = await User.findOne({ userId: targetUser.id, guildId: message.guild.id });
+            let dbUser = await User.findOne({ userId: targetUser.id, guildId: message.guild.id });
 
-            if (!dbUser || dbUser.leveling.level < 1) {
-                const isSelf = targetUser.id === message.author.id;
-                return message.reply(isSelf ? "You haven't earned any XP yet! Start chatting to gain levels." : "This user hasn't earned any XP yet.");
+            if (!dbUser) {
+                // Create a temporary user object for users not yet in the DB
+                dbUser = new User({
+                    userId: targetUser.id,
+                    guildId: message.guild.id,
+                    username: targetUser.username,
+                    discriminator: targetUser.discriminator,
+                });
             }
 
             // Get user's rank
@@ -41,7 +47,9 @@ module.exports = {
                 neededXp: progress.xpNeededForNextLevel
             };
 
-            const imageBuffer = await createRankCard(rankCardData);
+            const backgroundName = dbUser.preferences.rankCardBackground || 'default';
+
+            const imageBuffer = await createRankCard(rankCardData, backgroundName, targetMember);
             const attachment = new AttachmentBuilder(imageBuffer, { name: 'rank-card.png' });
 
             await message.reply({ files: [attachment] });

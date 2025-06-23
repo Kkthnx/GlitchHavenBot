@@ -1,4 +1,5 @@
-const { Client, GatewayIntentBits, Collection } = require('discord.js');
+const mongoose = require('mongoose');
+const { Client, GatewayIntentBits, Collection, Events } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
 require('dotenv').config();
@@ -8,7 +9,7 @@ const { connectDatabase } = require('./config/database');
 const logger = require('./config/logger');
 const { scheduleCleanup } = require('./tasks/cleanup');
 const { scheduleBirthdayCheck } = require('./tasks/birthdayChecker');
-const { startHealthCheck } = require('./utils/healthCheck');
+const { DISCORD_TOKEN } = require('./config');
 
 // Create Discord client with necessary intents
 const client = new Client({
@@ -95,17 +96,12 @@ const initializeBot = async () => {
         logger.info('Loaded commands and events');
 
         // Login to Discord
-        await client.login(process.env.DISCORD_TOKEN);
+        await client.login(DISCORD_TOKEN);
         logger.info('Bot logged in successfully');
 
         // Schedule tasks
         scheduleCleanup(client);
         scheduleBirthdayCheck(client);
-
-        // Start health check server (for deployment monitoring)
-        if (process.env.NODE_ENV === 'production') {
-            startHealthCheck(process.env.PORT || 3000);
-        }
     } catch (error) {
         logger.error('Failed to initialize bot:', error);
         process.exit(1);

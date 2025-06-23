@@ -35,7 +35,7 @@ const consoleFormat = winston.format.combine(
 const logger = winston.createLogger({
     level: process.env.LOG_LEVEL || 'info',
     format: logFormat,
-    defaultMeta: { service: 'glitch-haven-bot' },
+    defaultMeta: { service: 'gridkeeper-bot' },
     transports: [
         // Write all logs with level 'error' and below to error.log
         new winston.transports.File({

@@ -2,14 +2,14 @@ const { EmbedBuilder } = require('discord.js');
 const User = require('../../models/User');
 const Guild = require('../../models/Guild');
 const { formatRelativeTime } = require('../../utils/helpers');
-const logger = require('../../utils/logger');
+const logger = require('../../config/logger');
 
 module.exports = {
     name: 'flip',
     aliases: ['coinflip', 'cf'],
     description: 'Flip a coin and test your luck!',
     usage: 'flip',
-    cooldown: 30,
+    cooldown: 10,
     async execute(message, args, client) {
         try {
             // Get guild settings

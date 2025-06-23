@@ -228,6 +228,55 @@ function containsProfanity(text, bannedWords) {
     return regex.test(text);
 }
 
+/**
+ * Safe error handler for async operations
+ * @param {Function} fn - Async function to execute
+ * @param {string} context - Context for error logging
+ * @returns {Promise<any>} - Function result or null on error
+ */
+async function safeExecute(fn, context = 'Unknown') {
+    try {
+        return await fn();
+    } catch (error) {
+        console.error(`Error in ${context}:`, error);
+        return null;
+    }
+}
+
+/**
+ * Validate and sanitize user input
+ * @param {string} input - User input to validate
+ * @param {number} maxLength - Maximum allowed length
+ * @returns {string|null} - Sanitized input or null if invalid
+ */
+function sanitizeInput(input, maxLength = 1000) {
+    if (!input || typeof input !== 'string') return null;
+
+    const sanitized = input.trim().substring(0, maxLength);
+    return sanitized.length > 0 ? sanitized : null;
+}
+
+/**
+ * Format number with commas for better readability
+ * @param {number} num - Number to format
+ * @returns {string} - Formatted number
+ */
+function formatNumber(num) {
+    return num.toLocaleString();
+}
+
+/**
+ * Calculate percentage with safety checks
+ * @param {number} part - Part value
+ * @param {number} total - Total value
+ * @param {number} decimals - Number of decimal places
+ * @returns {string} - Formatted percentage
+ */
+function calculatePercentage(part, total, decimals = 1) {
+    if (total === 0) return '0%';
+    return ((part / total) * 100).toFixed(decimals) + '%';
+}
+
 module.exports = {
     formatDuration,
     parseTime,
@@ -247,5 +296,9 @@ module.exports = {
     extractChannelId,
     extractRoleId,
     capitalizeWords,
-    containsProfanity
+    containsProfanity,
+    safeExecute,
+    sanitizeInput,
+    formatNumber,
+    calculatePercentage
 }; 

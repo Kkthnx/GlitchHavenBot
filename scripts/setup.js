@@ -12,7 +12,7 @@ const rl = readline.createInterface({
 const question = (query) => new Promise((resolve) => rl.question(query, resolve));
 
 async function setup() {
-    console.log('🤖 GlitchHaven Bot Setup\n');
+    console.log('🤖 Gridkeeper Bot Setup\n');
     console.log('This script will help you create your .env file.\n');
 
     const envPath = path.join(process.cwd(), '.env');
@@ -36,7 +36,7 @@ async function setup() {
     envVars.DISCORD_GUILD_ID = await question('Discord Guild (Server) ID: ');
 
     // Database Configuration
-    envVars.MONGODB_URI = await question('MongoDB URI (or press Enter for localhost): ') || 'mongodb://localhost:27017/glitch-haven-bot';
+    envVars.MONGODB_URI = await question('MongoDB URI (or press Enter for localhost): ') || 'mongodb://localhost:27017/gridkeeper-bot';
 
     // Bot Configuration
     envVars.BOT_OWNER_ID = await question('Bot Owner ID (your Discord user ID): ');
