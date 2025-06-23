@@ -6,7 +6,7 @@ module.exports = {
     name: 'setbirthday',
     aliases: ['setbday', 'mybirthday'],
     description: 'Sets your birthday to be announced in the server.',
-    usage: 'setbirthday <MM/DD>',
+    usage: '!setbirthday <MM/DD>',
     cooldown: 10,
     guildOnly: true,
     async execute(message, args, client) {

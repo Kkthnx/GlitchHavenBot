@@ -5,7 +5,7 @@ module.exports = {
     name: 'birthdays',
     aliases: ['bdayconfig', 'bday'],
     description: 'Configure the birthday announcement system.',
-    usage: 'birthdays <enable|disable|channel|message> [#channel] [new message]',
+    usage: '!birthdays <enable|disable|channel|message> [#channel] [new message]',
     category: 'Admin',
     guildOnly: true,
     cooldown: 5,

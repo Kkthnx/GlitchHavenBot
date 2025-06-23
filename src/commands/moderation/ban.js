@@ -8,7 +8,7 @@ const logger = require('../../config/logger');
 module.exports = {
     name: 'ban',
     description: 'Bans a user from the server, with an optional duration.',
-    usage: 'ban <@user or userID> [duration] [reason]',
+    usage: '!ban <@user or userID> [duration] [reason]',
     cooldown: 5,
     permissions: [PermissionFlagsBits.BanMembers],
     guildOnly: true,

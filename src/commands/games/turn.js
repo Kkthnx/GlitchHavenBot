@@ -6,7 +6,7 @@ module.exports = {
     name: 'turn',
     aliases: ['turngame', 'game'],
     description: 'Manage turn-based games and notify players of their turns!',
-    usage: 'turn <create|join|start|next|skip|end|status|list> [options]',
+    usage: '!turn <create|join|start|next|skip|end|status|list> [options]',
     cooldown: 10,
     guildOnly: true,
     async execute(message, args, client) {

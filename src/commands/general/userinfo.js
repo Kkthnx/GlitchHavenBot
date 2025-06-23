@@ -7,7 +7,7 @@ module.exports = {
     name: 'userinfo',
     aliases: ['whois', 'user', 'ui'],
     description: 'Displays detailed information about a user.',
-    usage: 'userinfo [@user or userID]',
+    usage: '!userinfo [@user or userID]',
     cooldown: 5,
     guildOnly: true,
     async execute(message, args, client) {
@@ -57,10 +57,49 @@ module.exports = {
             if (dbUser) {
                 const warnings = dbUser.moderation.warnings.filter(w => w.active).length;
                 const mutes = dbUser.moderation.mutes.filter(m => m.active).length;
+
+                // Get reputation rank
+                const repRank = await dbUser.getReputationRank();
+
                 infoEmbed.addFields(
                     { name: 'Moderation History', value: `**Warnings:** ${warnings}\n**Mutes:** ${mutes}`, inline: true },
-                    { name: 'Last Seen', value: formatRelativeTime(dbUser.lastSeen), inline: true }
+                    { name: 'Last Seen', value: formatRelativeTime(dbUser.lastSeen), inline: true },
+                    { name: 'Reputation', value: `**Score:** ${dbUser.reputation.score}\n**Rank:** #${repRank}\n**Endorsements:** ${dbUser.reputation.totalEndorsements}`, inline: true }
                 );
+
+                // Add reputation badges
+                const badges = [];
+                if (dbUser.reputation.score >= 50) badges.push('🏆 Legend');
+                else if (dbUser.reputation.score >= 25) badges.push('⭐ Elite');
+                else if (dbUser.reputation.score >= 10) badges.push('🌟 Trusted');
+                else if (dbUser.reputation.score >= 5) badges.push('👍 Reliable');
+                else if (dbUser.reputation.score >= 1) badges.push('👋 New');
+
+                if (badges.length > 0) {
+                    infoEmbed.addFields({ name: '🎖️ Reputation Badges', value: badges.join(' • '), inline: false });
+                }
+
+                // Add recent endorsements if any
+                if (dbUser.reputation.endorsements.length > 0) {
+                    const recentEndorsements = dbUser.reputation.endorsements
+                        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+                        .slice(0, 3);
+
+                    let endorsementsText = '';
+                    for (const endorsement of recentEndorsements) {
+                        const date = new Date(endorsement.timestamp).toLocaleDateString();
+                        endorsementsText += `• **${endorsement.fromUsername}** (${date})\n`;
+                    }
+
+                    if (dbUser.reputation.endorsements.length > 3) {
+                        endorsementsText += `*... and ${dbUser.reputation.endorsements.length - 3} more*`;
+                    }
+
+                    infoEmbed.addFields({ name: '💬 Recent Endorsements', value: endorsementsText, inline: false });
+                }
+            } else {
+                // If no database user, show basic reputation info
+                infoEmbed.addFields({ name: 'Reputation', value: '**Score:** 0\n**Rank:** N/A\n**Endorsements:** 0', inline: true });
             }
 
             // Add status information
@@ -71,11 +110,43 @@ module.exports = {
                 offline: '⚫ Offline'
             };
 
-            const memberStatus = member.presence?.status || 'offline';
-            infoEmbed.addFields(
-                { name: 'Status', value: statusMap[memberStatus], inline: true }
-            );
+            // Determine accurate status without presence intent
+            let status = '⚫ Offline';
+            let statusDescription = '';
 
+            // Check if user is in the guild cache (indicates they're connected)
+            const isInCache = member.guild.members.cache.has(member.id);
+
+            // If user has been active recently (within last 5 minutes), show as recently active
+            if (dbUser && dbUser.lastSeen) {
+                const timeSinceLastSeen = Date.now() - new Date(dbUser.lastSeen).getTime();
+                const fiveMinutes = 5 * 60 * 1000;
+                const oneHour = 60 * 60 * 1000;
+
+                if (timeSinceLastSeen < fiveMinutes) {
+                    status = '🟢 Recently Active';
+                    statusDescription = ` (last seen ${formatRelativeTime(dbUser.lastSeen)})`;
+                } else if (timeSinceLastSeen < oneHour) {
+                    status = '🟡 Recently Online';
+                    statusDescription = ` (last seen ${formatRelativeTime(dbUser.lastSeen)})`;
+                } else {
+                    status = '⚫ Offline';
+                    statusDescription = ` (last seen ${formatRelativeTime(dbUser.lastSeen)})`;
+                }
+            } else {
+                // If no last seen data, check if they're in cache
+                if (isInCache) {
+                    status = '🟡 Online (No Activity)';
+                    statusDescription = ' (no recent activity tracked)';
+                } else {
+                    status = '⚫ Offline';
+                    statusDescription = ' (no activity data)';
+                }
+            }
+
+            infoEmbed.addFields(
+                { name: 'Status', value: status + statusDescription, inline: true }
+            );
 
             await message.reply({ embeds: [infoEmbed] });
 

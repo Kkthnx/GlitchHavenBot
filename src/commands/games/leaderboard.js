@@ -6,7 +6,7 @@ module.exports = {
     name: 'leaderboard',
     aliases: ['top', 'lb', 'leaderboards'],
     description: 'Displays various server leaderboards including coin flips, levels, and RPS.',
-    usage: 'leaderboard [coinflip|level|rps]',
+    usage: '!leaderboard [coinflip|level|rps]',
     cooldown: 10,
     guildOnly: true,
     async execute(message, args, client) {

@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const { guildCache, userCache, leaderboardCache, gameCache, cacheKeys } = require('./cache');
 const logger = require('../config/logger');
+const performanceMonitor = require('./performance');
 
 class DatabaseService {
     constructor() {
@@ -28,18 +29,28 @@ class DatabaseService {
      */
     async getGuildSettings(guildId) {
         const cacheKey = cacheKeys.guild(guildId);
-        let guildSettings = guildCache.get(cacheKey);
+        let settings = guildCache.get(cacheKey);
 
-        if (!guildSettings) {
-            const Guild = require('../models/Guild');
-            guildSettings = await Guild.findOne({ guildId }).lean();
+        if (!settings) {
+            settings = await performanceMonitor.monitorQuery(async () => {
+                const Guild = require('../models/Guild');
+                return await Guild.findOne({ guildId }).lean();
+            }, 'getGuildSettings');
 
-            if (guildSettings) {
-                guildCache.set(cacheKey, guildSettings, 10 * 60 * 1000); // 10 minutes
+            if (settings) {
+                guildCache.set(cacheKey, settings, 10 * 60 * 1000); // 10 minutes
+                performanceMonitor.recordCacheAccess(false); // Cache miss
+            } else {
+                // Create default settings if none exist
+                settings = await this.createDefaultGuildSettings(guildId);
+                guildCache.set(cacheKey, settings, 10 * 60 * 1000);
+                performanceMonitor.recordCacheAccess(false);
             }
+        } else {
+            performanceMonitor.recordCacheAccess(true); // Cache hit
         }
 
-        return guildSettings;
+        return settings;
     }
 
     /**
@@ -54,9 +65,15 @@ class DatabaseService {
         let user = userCache.get(cacheKey);
 
         if (!user) {
-            const User = require('../models/User');
-            user = await User.findOrCreate(userId, guildId, userData);
+            user = await performanceMonitor.monitorQuery(async () => {
+                const User = require('../models/User');
+                return await User.findOrCreate(userId, guildId, userData);
+            }, 'getOrCreateUser');
+
             userCache.set(cacheKey, user, 5 * 60 * 1000); // 5 minutes
+            performanceMonitor.recordCacheAccess(false);
+        } else {
+            performanceMonitor.recordCacheAccess(true);
         }
 
         return user;
@@ -101,26 +118,26 @@ class DatabaseService {
         let leaderboard = leaderboardCache.get(cacheKey);
 
         if (!leaderboard) {
-            const User = require('../models/User');
+            leaderboard = await performanceMonitor.monitorQuery(async () => {
+                const User = require('../models/User');
+                switch (type) {
+                    case 'level':
+                        return await User.getLevelLeaderboard(guildId, limit);
+                    case 'coinflip':
+                        return await User.getLeaderboard(guildId, limit);
+                    case 'rps':
+                        return await User.getRPSLeaderboard(guildId, limit);
+                    case 'reputation':
+                        return await User.getReputationLeaderboard(guildId, limit);
+                    default:
+                        return await User.getLevelLeaderboard(guildId, limit);
+                }
+            }, `getLeaderboard_${type}`);
 
-            let query = User.find({ guildId });
-
-            switch (type) {
-                case 'level':
-                    query = query.sort({ 'leveling.level': -1, 'leveling.xp': -1 });
-                    break;
-                case 'coinflip':
-                    query = query.sort({ 'gameStats.coinFlips.wins': -1 });
-                    break;
-                case 'rps':
-                    query = query.sort({ 'gameStats.rps.wins': -1 });
-                    break;
-                default:
-                    query = query.sort({ 'leveling.level': -1, 'leveling.xp': -1 });
-            }
-
-            leaderboard = await query.limit(limit).lean();
             leaderboardCache.set(cacheKey, leaderboard, 2 * 60 * 1000); // 2 minutes
+            performanceMonitor.recordCacheAccess(false);
+        } else {
+            performanceMonitor.recordCacheAccess(true);
         }
 
         return leaderboard;
@@ -326,6 +343,40 @@ class DatabaseService {
             logger.error(`Query error in ${queryName}:`, error);
             throw error;
         }
+    }
+
+    /**
+     * Create default guild settings
+     * @param {string} guildId - Guild ID
+     * @returns {Promise<Object>} - Default guild settings
+     */
+    async createDefaultGuildSettings(guildId) {
+        const Guild = require('../models/Guild');
+        const defaultSettings = {
+            guildId,
+            prefix: '!',
+            leveling: {
+                enabled: true,
+                xpCooldown: 60000,
+                roleRewards: []
+            },
+            moderation: {
+                autoMod: {
+                    enabled: false,
+                    wordFilter: false,
+                    bannedWords: []
+                }
+            },
+            welcome: {
+                enabled: false,
+                channelId: null,
+                message: 'Welcome {user} to {server}!'
+            }
+        };
+
+        const guild = new Guild(defaultSettings);
+        await guild.save();
+        return guild.toObject();
     }
 }
 

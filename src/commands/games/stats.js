@@ -6,7 +6,7 @@ module.exports = {
     name: 'stats',
     aliases: ['gamestats', 'mystats'],
     description: 'Displays comprehensive game statistics for yourself or another user.',
-    usage: 'stats [@user]',
+    usage: '!stats [@user]',
     cooldown: 10,
     guildOnly: true,
     async execute(message, args, client) {

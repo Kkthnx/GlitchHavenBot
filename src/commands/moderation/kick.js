@@ -7,7 +7,7 @@ const logger = require('../../config/logger');
 module.exports = {
     name: 'kick',
     description: 'Kicks a user from the server.',
-    usage: 'kick <@user> [reason]',
+    usage: '!kick <@user> [reason]',
     cooldown: 5,
     permissions: [PermissionFlagsBits.KickMembers],
     guildOnly: true,

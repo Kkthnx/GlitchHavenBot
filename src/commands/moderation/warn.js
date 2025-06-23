@@ -9,7 +9,7 @@ module.exports = {
     name: 'warn',
     aliases: ['warning'],
     description: 'Warn a user for breaking server rules',
-    usage: 'warn <@user> <reason>',
+    usage: '!warn <@user> <reason>',
     cooldown: 5,
     permissions: ['ManageMessages'],
     async execute(message, args, client) {

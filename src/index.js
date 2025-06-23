@@ -9,6 +9,8 @@ const { connectDatabase } = require('./config/database');
 const logger = require('./config/logger');
 const { scheduleCleanup } = require('./tasks/cleanup');
 const { scheduleBirthdayCheck } = require('./tasks/birthdayChecker');
+const memoryOptimizer = require('./utils/memoryOptimizer');
+const cleanupUtility = require('./utils/cleanup');
 const { DISCORD_TOKEN } = require('./config');
 
 // Create Discord client with necessary intents
@@ -102,6 +104,18 @@ const initializeBot = async () => {
         // Schedule tasks
         scheduleCleanup(client);
         scheduleBirthdayCheck(client);
+
+        // Start automatic cleanup scheduler
+        cleanupUtility.startAutomaticCleanup();
+
+        // Log initial memory stats
+        const memStats = memoryOptimizer.getMemoryStats();
+        logger.info(`Initial memory usage: ${memStats.heapUsed}MB / ${memStats.heapTotal}MB (${memStats.usageRatio}%)`);
+
+        // Log cleanup stats
+        const cleanupStats = cleanupUtility.getCleanupStats();
+        logger.info(`Cleanup utility initialized. Next cleanup in ${cleanupStats.hoursSinceLastCleanup} hours`);
+
     } catch (error) {
         logger.error('Failed to initialize bot:', error);
         process.exit(1);

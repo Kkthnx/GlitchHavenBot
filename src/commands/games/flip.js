@@ -8,7 +8,7 @@ module.exports = {
     name: 'flip',
     aliases: ['coinflip', 'cf'],
     description: 'Flip a coin and test your luck!',
-    usage: 'flip',
+    usage: '!flip',
     cooldown: 10,
     async execute(message, args, client) {
         try {

@@ -4,7 +4,7 @@ const Guild = require('../../models/Guild');
 module.exports = {
     name: 'automod',
     description: 'Configure auto-moderation settings for the server.',
-    usage: 'automod <subcommand> [options]',
+    usage: '!automod <subcommand> [options]',
     category: 'Admin',
     guildOnly: true,
     cooldown: 5,
@@ -122,4 +122,4 @@ function handleListWords(message, autoMod) {
         .setTimestamp();
 
     return message.reply({ embeds: [listEmbed] });
-} 
+}

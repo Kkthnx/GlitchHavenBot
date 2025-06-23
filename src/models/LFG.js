@@ -11,13 +11,8 @@ const lfgSchema = new mongoose.Schema({
     players: { type: [String], default: [] }, // Array of user IDs
     status: {
         type: String,
-        enum: ['open', 'full', 'closed', 'expired'],
+        enum: ['open', 'full', 'closed'],
         default: 'open'
-    },
-    expiresAt: {
-        type: Date,
-        required: true,
-        index: { expires: '1m' } // Automatically remove documents 1 minute after they expire
     }
 }, { timestamps: true });
 

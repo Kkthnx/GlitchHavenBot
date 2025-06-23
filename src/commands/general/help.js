@@ -4,7 +4,7 @@ module.exports = {
     name: 'help',
     aliases: ['h', 'commands'],
     description: 'Shows all available commands or information about a specific command',
-    usage: 'help [command]',
+    usage: '!help [command]',
     cooldown: 5,
     async execute(message, args, client) {
         const { commands } = client;
@@ -44,6 +44,7 @@ module.exports = {
         // Show general help with all commands organized by category
         const categories = {
             'General': [],
+            'Reputation': [],
             'Moderation': [],
             'Games': [],
             'Welcome': [],
@@ -88,6 +89,7 @@ module.exports = {
         helpEmbed.addFields({
             name: '📋 Quick Info',
             value: [
+                '• **Reputation**: Build trust with endorsements and reputation badges',
                 '• **Moderation**: Manage your server with powerful moderation tools',
                 '• **Games**: Have fun with coin flipping, adventures, pets, and turn-based games',
                 '• **Welcome**: Customize welcome messages and auto-roles',
@@ -114,6 +116,14 @@ function getCommandCategory(commandName) {
         'user': 'General',
         'server': 'General',
         'setbirthday': 'General',
+        'userinfo': 'General',
+        'rankcard': 'General',
+
+        // Reputation commands
+        'rep': 'Reputation',
+        'reputation': 'Reputation',
+        'repleaderboard': 'Reputation',
+        'repgiven': 'Reputation',
 
         // Moderation commands
         'warn': 'Moderation',
@@ -137,6 +147,7 @@ function getCommandCategory(commandName) {
         'adventure': 'Games',
         'pet': 'Games',
         'turn': 'Games',
+        'lfg': 'Games',
 
         // Welcome commands
         'welcome': 'Welcome',
@@ -146,7 +157,8 @@ function getCommandCategory(commandName) {
         // Utility commands
         'prefix': 'Utility',
         'settings': 'Utility',
-        'custom': 'Utility'
+        'custom': 'Utility',
+        'performance': 'Utility'
     };
 
     return categoryMap[commandName] || 'Utility';
@@ -156,6 +168,7 @@ function getCategoryEmoji(category) {
     const emojis = {
         'Admin': '👑',
         'General': '📋',
+        'Reputation': '⭐',
         'Moderation': '🛡️',
         'Games': '🎮',
         'Welcome': '👋',

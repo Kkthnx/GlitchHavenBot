@@ -7,7 +7,7 @@ module.exports = {
     name: 'pet',
     aliases: ['virtualpet', 'companion'],
     description: 'Adopt and care for your virtual pet!',
-    usage: 'pet <adopt|feed|play|train|battle|status|shop> [options]',
+    usage: '!pet <adopt|feed|play|train|battle|status|shop> [options]',
     cooldown: 10,
     guildOnly: true,
     async execute(message, args, client) {

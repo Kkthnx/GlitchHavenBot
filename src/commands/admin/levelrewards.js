@@ -6,7 +6,7 @@ module.exports = {
     name: 'levelrewards',
     aliases: ['lr', 'levelrole'],
     description: 'Manage role rewards for leveling up.',
-    usage: 'levelrewards <add|remove|list> [level] [@role]',
+    usage: '!levelrewards <add|remove|list> [level] [@role]',
     category: 'Admin',
     guildOnly: true,
     cooldown: 5,

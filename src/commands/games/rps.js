@@ -5,7 +5,7 @@ module.exports = {
     name: 'rps',
     aliases: ['rockpaperscissors'],
     description: 'Challenge someone to a game of Rock, Paper, Scissors!',
-    usage: 'rps <@user>',
+    usage: '!rps <@user>',
     category: 'Games',
     cooldown: 10,
     async execute(message, args, client) {

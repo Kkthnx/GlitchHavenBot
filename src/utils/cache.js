@@ -1,14 +1,16 @@
 const logger = require('../config/logger');
 
 class Cache {
-    constructor() {
+    constructor(maxSize = 1000) {
         this.cache = new Map();
         this.ttl = new Map(); // Time-to-live for cache entries
+        this.maxSize = maxSize;
         this.stats = {
             hits: 0,
             misses: 0,
             sets: 0,
-            deletes: 0
+            deletes: 0,
+            evictions: 0
         };
     }
 
@@ -19,6 +21,11 @@ class Cache {
      * @param {number} ttl - Time to live in milliseconds (default: 5 minutes)
      */
     set(key, value, ttl = 5 * 60 * 1000) {
+        // Evict oldest entries if cache is full
+        if (this.cache.size >= this.maxSize) {
+            this.evictOldest();
+        }
+
         this.cache.set(key, value);
         this.ttl.set(key, Date.now() + ttl);
         this.stats.sets++;
@@ -72,6 +79,26 @@ class Cache {
     }
 
     /**
+     * Evict oldest entries when cache is full
+     */
+    evictOldest() {
+        let oldestKey = null;
+        let oldestTime = Date.now();
+
+        for (const [key, expiry] of this.ttl.entries()) {
+            if (expiry < oldestTime) {
+                oldestTime = expiry;
+                oldestKey = key;
+            }
+        }
+
+        if (oldestKey) {
+            this.delete(oldestKey);
+            this.stats.evictions++;
+        }
+    }
+
+    /**
      * Get cache statistics
      * @returns {Object} - Cache statistics
      */
@@ -84,6 +111,7 @@ class Cache {
             ...this.stats,
             hitRate: `${hitRate}%`,
             size: this.cache.size,
+            maxSize: this.maxSize,
             memoryUsage: this.getMemoryUsage()
         };
     }
@@ -117,11 +145,11 @@ class Cache {
     }
 }
 
-// Create cache instances for different data types
-const guildCache = new Cache();
-const userCache = new Cache();
-const leaderboardCache = new Cache();
-const gameCache = new Cache();
+// Create cache instances with optimized sizes for different data types
+const guildCache = new Cache(50); // Smaller size for guild settings
+const userCache = new Cache(200); // Medium size for user data
+const leaderboardCache = new Cache(100); // Medium size for leaderboards
+const gameCache = new Cache(50); // Smaller size for game data
 
 // Cache keys generator
 const cacheKeys = {

@@ -112,6 +112,20 @@ const userSchema = new mongoose.Schema({
     economy: {
         wallet: { type: Number, default: 0 },
         bank: { type: Number, default: 0 },
+    },
+
+    // Reputation system
+    reputation: {
+        score: { type: Number, default: 0 },
+        totalEndorsements: { type: Number, default: 0 },
+        endorsements: [{
+            fromUserId: String,
+            fromUsername: String,
+            message: { type: String, maxlength: 100 },
+            timestamp: { type: Date, default: Date.now }
+        }],
+        lastGivenRep: { type: Date, default: 0 }, // Anti-abuse tracking
+        repGivenToday: { type: Number, default: 0 } // Daily limit tracking
     }
 }, {
     timestamps: true
@@ -125,11 +139,13 @@ userSchema.index({ 'gameStats.coinFlips.total': -1 });
 userSchema.index({ 'gameStats.coinFlips.bestStreak': -1 });
 userSchema.index({ 'gameStats.rps.wins': -1 });
 userSchema.index({ birthday: 1 }, { sparse: true });
+userSchema.index({ 'reputation.score': -1 }); // For reputation leaderboards
 
 // Additional performance indexes
 userSchema.index({ guildId: 1, 'leveling.level': -1, 'leveling.xp': -1 });
 userSchema.index({ guildId: 1, 'gameStats.coinFlips.wins': -1 });
 userSchema.index({ guildId: 1, 'gameStats.rps.wins': -1 });
+userSchema.index({ guildId: 1, 'reputation.score': -1 }); // Guild-specific reputation leaderboards
 userSchema.index({ 'leveling.lastMessageTimestamp': 1 });
 userSchema.index({ 'gameStats.lastFlip': 1 });
 userSchema.index({ 'moderation.warnings.active': 1 });
@@ -140,6 +156,7 @@ userSchema.index({ 'moderation.bans.active': 1 });
 userSchema.index({ guildId: 1, 'leveling.level': -1 });
 userSchema.index({ guildId: 1, 'gameStats.coinFlips.total': -1 });
 userSchema.index({ guildId: 1, 'gameStats.rps.total': -1 });
+userSchema.index({ guildId: 1, 'reputation.score': -1, 'reputation.totalEndorsements': -1 });
 
 // Level calculation function
 function calculateLevel(xp) {
@@ -244,7 +261,12 @@ userSchema.methods.addXP = async function (amount, reason = 'message') {
         };
     }
 
-    await this.save();
+    // For non-level-up XP gains, use updateOne for better performance
+    // Only save if we need to update the document
+    if (this.isModified()) {
+        await this.save();
+    }
+
     return {
         leveledUp: false,
         xpGained: amount,
@@ -272,7 +294,69 @@ userSchema.methods.getLevelProgress = function () {
 
 userSchema.methods.updateLastSeen = function () {
     this.lastSeen = new Date();
+    // Use updateOne for better performance when only updating lastSeen
+    return this.constructor.updateOne(
+        { _id: this._id },
+        { lastSeen: this.lastSeen }
+    );
+};
+
+// Reputation methods
+userSchema.methods.addEndorsement = function (fromUserId, fromUsername, message = '') {
+    // Check if this user has already endorsed this person
+    const existingEndorsement = this.reputation.endorsements.find(
+        end => end.fromUserId === fromUserId
+    );
+
+    if (existingEndorsement) {
+        throw new Error('You have already endorsed this user');
+    }
+
+    // Add the endorsement
+    this.reputation.endorsements.push({
+        fromUserId,
+        fromUsername,
+        message
+    });
+
+    // Update reputation score (simple +1 per endorsement)
+    this.reputation.score += 1;
+    this.reputation.totalEndorsements += 1;
+
     return this.save();
+};
+
+userSchema.methods.canGiveRep = function () {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const lastGivenDate = new Date(this.reputation.lastGivenRep);
+    const lastGivenDay = new Date(lastGivenDate.getFullYear(), lastGivenDate.getMonth(), lastGivenDate.getDate());
+
+    // Reset daily counter if it's a new day
+    if (lastGivenDay < today) {
+        this.reputation.repGivenToday = 0;
+    }
+
+    // Check daily limit (3 reps per day)
+    return this.reputation.repGivenToday < 3;
+};
+
+userSchema.methods.recordRepGiven = function () {
+    this.reputation.lastGivenRep = new Date();
+    this.reputation.repGivenToday += 1;
+    return this.save();
+};
+
+userSchema.methods.getReputationRank = async function () {
+    const User = this.constructor;
+
+    // Use countDocuments for better performance on large datasets
+    const rank = await User.countDocuments({
+        guildId: this.guildId,
+        'reputation.score': { $gt: this.reputation.score }
+    });
+
+    return rank + 1;
 };
 
 // Static methods
@@ -313,6 +397,58 @@ userSchema.statics.getLevelLeaderboard = async function (guildId, limit = 10) {
     return this.find({ guildId })
         .sort({ 'leveling.level': -1, 'leveling.xp': -1 })
         .limit(limit);
+};
+
+userSchema.statics.getReputationLeaderboard = async function (guildId, limit = 10) {
+    return this.find({ guildId })
+        .sort({ 'reputation.score': -1, 'reputation.totalEndorsements': -1 })
+        .limit(limit);
+};
+
+userSchema.statics.getRPSLeaderboard = async function (guildId, limit = 10) {
+    return this.find({ guildId })
+        .sort({ 'gameStats.rps.wins': -1, 'gameStats.rps.total': -1 })
+        .limit(limit);
+};
+
+// Add bulk XP update method for better performance
+userSchema.statics.bulkUpdateXP = async function (updates) {
+    const bulkOps = updates.map(update => ({
+        updateOne: {
+            filter: { userId: update.userId, guildId: update.guildId },
+            update: {
+                $inc: {
+                    'leveling.xp': update.xp,
+                    'leveling.totalXp': update.xp
+                },
+                $set: {
+                    'leveling.lastMessage': new Date()
+                }
+            }
+        }
+    }));
+
+    return this.bulkWrite(bulkOps, { ordered: false });
+};
+
+// Add bulk reputation update method
+userSchema.statics.bulkUpdateReputation = async function (updates) {
+    const bulkOps = updates.map(update => ({
+        updateOne: {
+            filter: { userId: update.userId, guildId: update.guildId },
+            update: {
+                $inc: {
+                    'reputation.score': update.repChange || 0,
+                    'reputation.totalEndorsements': update.endorsementsChange || 0
+                },
+                $push: {
+                    'reputation.endorsements': update.endorsement
+                }
+            }
+        }
+    }));
+
+    return this.bulkWrite(bulkOps, { ordered: false });
 };
 
 module.exports = mongoose.model('User', userSchema);

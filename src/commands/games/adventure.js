@@ -6,7 +6,7 @@ module.exports = {
     name: 'adventure',
     aliases: ['story', 'quest'],
     description: 'Start or participate in a collaborative text-based adventure!',
-    usage: 'adventure <start|join|vote|status> [options]',
+    usage: '!adventure <start|join|vote|status> [options]',
     cooldown: 10,
     guildOnly: true,
     async execute(message, args, client) {

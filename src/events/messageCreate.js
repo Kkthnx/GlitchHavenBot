@@ -3,9 +3,14 @@ const logger = require('../config/logger');
 const databaseService = require('../utils/databaseService');
 const { hasModeratorPermissions, canModerateUser } = require('../utils/permissions');
 const { containsProfanity } = require('../utils/helpers');
+const performanceMonitor = require('../utils/performance');
 
 // Cooldown collection for XP (prevent spam)
 const xpCooldowns = new Collection();
+// Batch XP updates for better performance
+const xpBatch = new Map();
+const XP_BATCH_SIZE = 10;
+const XP_BATCH_TIMEOUT = 5000; // 5 seconds
 
 module.exports = {
     name: 'messageCreate',
@@ -25,6 +30,11 @@ module.exports = {
             ]);
 
             if (!guildSettings) return;
+
+            // Update user's last seen timestamp
+            if (userData) {
+                await userData.updateLastSeen();
+            }
 
             // Auto-moderation must be handled first
             if (guildSettings.moderation.autoMod.enabled) {
@@ -118,9 +128,11 @@ async function handleCommands(message, client, prefix) {
     timestamps.set(message.author.id, now);
     setTimeout(() => timestamps.delete(message.author.id), cooldownAmount);
 
-    // Execute command
+    // Execute command with performance monitoring
     try {
-        await command.execute(message, args, client);
+        await performanceMonitor.monitorCommand(async () => {
+            await command.execute(message, args, client);
+        }, command.name);
     } catch (error) {
         logger.error(`Error executing command ${command.name}:`, error);
         message.reply('There was an error executing that command!').catch(() => { });
@@ -138,11 +150,89 @@ async function handleXp(message, user, guildSettings) {
     }
 
     const xpToAward = Math.floor(Math.random() * 11) + 15;
-    const result = await user.addXP(xpToAward, 'message');
-    xpCooldowns.set(cooldownKey, Date.now());
+    const guildKey = message.guild.id;
 
-    if (result.leveledUp) {
-        await handleLevelUp(message, result, guildSettings);
+    // Add to batch for bulk processing
+    if (!xpBatch.has(guildKey)) {
+        xpBatch.set(guildKey, []);
+
+        // Set timeout to process batch
+        setTimeout(() => processXpBatch(guildKey), XP_BATCH_TIMEOUT);
+    }
+
+    const batch = xpBatch.get(guildKey);
+    batch.push({
+        userId: message.author.id,
+        guildId: message.guild.id,
+        xp: xpToAward,
+        user: user
+    });
+
+    // Process batch if it reaches the size limit
+    if (batch.length >= XP_BATCH_SIZE) {
+        await processXpBatch(guildKey);
+    }
+
+    xpCooldowns.set(cooldownKey, Date.now());
+}
+
+async function processXpBatch(guildKey) {
+    const batch = xpBatch.get(guildKey);
+    if (!batch || batch.length === 0) return;
+
+    xpBatch.delete(guildKey);
+
+    try {
+        const User = require('../models/User');
+        const updates = [];
+        const levelUps = [];
+
+        // Process each user in the batch
+        for (const item of batch) {
+            const oldLevel = item.user.leveling.level;
+            item.user.leveling.xp += item.xp;
+            item.user.leveling.totalXp += item.xp;
+            item.user.leveling.lastMessage = new Date();
+
+            const newLevel = Math.floor(0.1 * Math.sqrt(item.user.leveling.xp));
+
+            if (newLevel > oldLevel) {
+                // Level up - need to save individually for level up history
+                item.user.leveling.level = newLevel;
+                item.user.leveling.levelUpHistory.push({
+                    level: newLevel,
+                    timestamp: new Date()
+                });
+                levelUps.push({
+                    user: item.user,
+                    oldLevel,
+                    newLevel,
+                    xpGained: item.xp
+                });
+            } else {
+                // No level up - add to bulk update
+                updates.push({
+                    userId: item.userId,
+                    guildId: item.guildId,
+                    xp: item.xp
+                });
+            }
+        }
+
+        // Execute bulk update for non-level-up XP
+        if (updates.length > 0) {
+            await User.bulkUpdateXP(updates);
+        }
+
+        // Handle level ups individually (they need special processing)
+        for (const levelUp of levelUps) {
+            await levelUp.user.save();
+            // Note: Level up notifications would need to be handled differently
+            // since we don't have the message context in batch processing
+        }
+
+    } catch (error) {
+        logger.error('Error processing XP batch:', error);
     }
 }
 

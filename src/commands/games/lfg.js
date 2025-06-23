@@ -6,7 +6,7 @@ module.exports = {
     name: 'lfg',
     aliases: ['lookingforgroup'],
     description: 'Create a Looking-For-Group post to find teammates.',
-    usage: 'lfg <slots> <game> <description>',
+    usage: '!lfg <slots> <game> <description>',
     cooldown: 10, // Reduced from 60 to 10 seconds
     guildOnly: true,
     async execute(message, args, client) {
@@ -38,7 +38,7 @@ module.exports = {
                 { name: 'Slots Available', value: `**${slots}**`, inline: true },
                 { name: 'Players Joined', value: 'None yet!', inline: true }
             )
-            .setFooter({ text: 'LFG post is active for 2 hours.' })
+            .setFooter({ text: 'Use the Close button when you\'re done or have enough players.' })
             .setTimestamp();
 
         // Build the Interactive Buttons
@@ -73,8 +73,7 @@ module.exports = {
                 game: game,
                 description: description,
                 slots: slots,
-                players: [],
-                expiresAt: new Date(Date.now() + 2 * 60 * 60 * 1000), // Expires in 2 hours
+                players: []
             });
 
             await lfgSession.save();

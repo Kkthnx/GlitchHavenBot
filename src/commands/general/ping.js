@@ -4,7 +4,7 @@ module.exports = {
     name: 'ping',
     aliases: ['latency'],
     description: 'Shows the bot\'s latency and connection status',
-    usage: 'ping',
+    usage: '!ping',
     cooldown: 5,
     async execute(message, args, client) {
         const sent = await message.reply('🏓 Pinging...');

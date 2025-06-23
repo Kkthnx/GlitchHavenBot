@@ -7,7 +7,7 @@ module.exports = {
     name: 'level',
     aliases: ['rank', 'xp'],
     description: 'Displays your level and XP progress as a graphical rank card.',
-    usage: 'level [@user]',
+    usage: '!level [@user]',
     cooldown: 10, // Reduced from 15 to 10 seconds
     guildOnly: true,
     async execute(message, args, client) {

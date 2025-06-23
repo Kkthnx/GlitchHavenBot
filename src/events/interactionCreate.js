@@ -253,7 +253,7 @@ async function determineWinner(interaction, challengeData, client) {
 
             // Award XP to winner
             await winnerUser.addXP(50, 'rps_win');
-            
+
             // Small XP to loser for participation
             await loserUser.addXP(10, 'rps_loss');
 
@@ -408,7 +408,6 @@ async function handleClose(interaction, lfgSession) {
     lfgSession.status = 'closed';
     await lfgSession.save();
     await updateLFGMessage(interaction, lfgSession);
-    // The document will be automatically deleted by MongoDB due to the TTL index.
     await interaction.reply({ content: 'You have closed the LFG post.', flags: [MessageFlags.Ephemeral] });
 }
 
@@ -443,10 +442,10 @@ async function updateLFGMessage(interaction, lfgSession) {
             .setEmoji('🔒')
     );
 
-    if (lfgSession.status === 'closed' || lfgSession.status === 'expired') {
+    if (lfgSession.status === 'closed') {
         newEmbed.setColor(0x808080) // Gray
-            .setTitle(`[${lfgSession.status.toUpperCase()}] 🎮 ${lfgSession.game}`)
-            .setFooter({ text: `This LFG is now ${lfgSession.status}.` });
+            .setTitle(`[CLOSED] 🎮 ${lfgSession.game}`)
+            .setFooter({ text: 'This LFG is now closed.' });
         row.components.forEach(button => button.setDisabled(true));
     }
 

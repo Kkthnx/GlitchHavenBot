@@ -9,7 +9,7 @@ module.exports = {
     name: 'rankcard',
     aliases: ['card'],
     description: 'Customize your rank card background.',
-    usage: 'rankcard <set|list|view|clear> [background_name]',
+    usage: '!rankcard <set|list|view|clear> [background_name]',
     cooldown: 10,
     guildOnly: true,
     async execute(message, args, client) {
@@ -129,7 +129,7 @@ async function handleList(message) {
             .setColor(0x0099FF)
             .setTitle('Available Rank Card Backgrounds')
             .setDescription(availableBackgrounds.map(bg => `• ${bg}`).join('\n') || 'No backgrounds available yet. Admins can add .png files to `assets/rankcards`.')
-            .setFooter({ text: 'Use `!rankcard set <name>` to choose one.' });
+            .setFooter({ text: 'Use `/rankcard set <name>` to choose one.' });
 
         await message.reply({ embeds: [embed] });
     } catch (error) {
@@ -138,7 +138,7 @@ async function handleList(message) {
             .setColor(0x0099FF)
             .setTitle('Available Rank Card Backgrounds')
             .setDescription('No backgrounds available yet. Admins can add .png files to `assets/rankcards`.')
-            .setFooter({ text: 'Use `!rankcard set <name>` to choose one.' });
+            .setFooter({ text: 'Use `/rankcard set <name>` to choose one.' });
         await message.reply({ embeds: [embed] });
     }
 }
