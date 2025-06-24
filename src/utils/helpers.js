@@ -395,6 +395,20 @@ async function replyToInteraction(interaction, content) {
 }
 
 /**
+ * Edit reply for interaction (handles both slash and prefix commands)
+ * @param {Object} interaction - Discord interaction object
+ * @param {Object} content - Content to send
+ * @returns {Promise} - Edit reply promise
+ */
+async function editInteractionReply(interaction, content) {
+  if (isSlashCommand(interaction)) {
+    return interaction.editReply(content);
+  }
+  // For legacy commands, we need to send a new message since we can't edit the original
+  return interaction.channel.send(content);
+}
+
+/**
  * Defer reply for slash commands
  * @param {Object} interaction - Discord interaction object
  * @returns {Promise} - Defer promise
@@ -506,6 +520,7 @@ module.exports = {
   handleCommandError,
   isSlashCommand,
   replyToInteraction,
+  editInteractionReply,
   deferInteraction,
   logModerationAction,
 };
