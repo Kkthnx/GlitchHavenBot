@@ -50,7 +50,7 @@ const guildSchema = new mongoose.Schema(
       },
       slap: {
         enabled: { type: Boolean, default: true },
-        cooldown: { type: Number, default: 30 }, // 30 seconds default
+        cooldown: { type: Number, default: 43200 }, // 12 hours default
       },
     },
 

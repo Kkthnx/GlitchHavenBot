@@ -8,7 +8,7 @@ module.exports = {
   aliases: ["smack", "hit"],
   description: "Slap another user! Fun command with cooldown to prevent spam.",
   usage: "!slap @user",
-  cooldown: 30, // 30 second cooldown
+  cooldown: 43200, // 12 hour cooldown
   guildOnly: true,
   async execute(message, _args, _client) {
     try {
@@ -37,7 +37,7 @@ module.exports = {
       const guildSettings = await databaseService.getGuildSettings(
         message.guild.id,
       );
-      const cooldownTime = (guildSettings.games?.slap?.cooldown || 30) * 1000; // 30 seconds default
+      const cooldownTime = (guildSettings.games?.slap?.cooldown || 43200) * 1000; // 12 hours default
 
       // Get or create user data
       const user = await databaseService.getOrCreateUser(
@@ -61,8 +61,18 @@ module.exports = {
             (now - user.gameStats.slaps.lastSlapGiven.getTime())) /
           1000,
         );
+        const remainingHours = Math.floor(remainingTime / 3600);
+        const remainingMinutes = Math.floor((remainingTime % 3600) / 60);
+
+        let timeMessage;
+        if (remainingHours > 0) {
+          timeMessage = `${remainingHours} hours and ${remainingMinutes} minutes`;
+        } else {
+          timeMessage = `${remainingMinutes} minutes`;
+        }
+
         return message.reply(
-          `⏰ Slow down! You can slap again in **${remainingTime} seconds**!`,
+          `⏰ Slow down! You can slap again in **${timeMessage}**!`,
         );
       }
 
