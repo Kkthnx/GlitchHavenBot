@@ -1,145 +1,74 @@
-# Gridkeeper Bot
+# Gridkeeper Discord Bot
 
-An advanced Discord bot with comprehensive moderation, welcome features, games, and user assistance capabilities.
+A powerful, modern Discord bot for advanced moderation, automation, community engagement, and fun. Built with Discord.js v14+ and designed for reliability, extensibility, and ease of use.
 
-## Features
+---
+
+## ✨ Features
 
 ### 🛡️ Moderation
 
-- User warnings, mutes, kicks, and bans
-- Auto-moderation for spam and inappropriate content
-- Moderation logs and audit trails
-- Temporary moderation actions with automatic expiration
+- **Purge & Bulk Delete**: Clean up messages with `/purge`, `/bulkdelete`, and legacy commands (`!purge`, `!bulkdelete`).
+- **Scheduled Cleanup**: Automatic message cleanup with `/autocleanup` and scheduled tasks.
+- **Warnings, Mutes, Kicks, Bans**: Full suite of moderation tools with logging and audit trails.
+- **Auto-moderation**: Spam and inappropriate content filtering.
+- **Role & Permission Management**: Assign, remove, and manage roles with ease.
 
-### 👋 Welcome System
+### 👋 Welcome & Community
 
-- Customizable welcome messages
-- Welcome images with user avatars
-- Role assignment on join
+- Customizable welcome messages and images
+- Auto role assignment on join
 - Server rules presentation
+- Birthday and event reminders
 
-### 🎮 Games
+### 🎮 Games & Fun
 
-- Coin flipping game with statistics
-- Leaderboards and user profiles
+- Coin flip, leaderboards, and user stats
 - Customizable game settings
 
-### 🤖 User Assistance
+### 🤖 Utilities & Automation
 
-- Help command with categorized information
-- Server information and statistics
-- User profile and activity tracking
+- Help and info commands
+- User and server stats
+- Scheduled and on-demand database backups
 - Custom commands and responses
 
-## Quick Start
+---
 
-### 🚀 Easy Setup
-
-1. **Clone the repository**
-
-   ```bash
-   git clone <repository-url>
-   cd GridkeeperBot
-   ```
-
-2. **Run the setup script**
-
-   ```bash
-   npm run setup
-   ```
-
-   This will guide you through creating your `.env` file.
-
-3. **Install dependencies**
-
-   ```bash
-   npm install
-   ```
-
-4. **Start the bot**
-
-   ```bash
-   npm start
-   ```
-
-## Setup Instructions
+## 🚀 Quick Start
 
 ### Prerequisites
 
-- Node.js 18.0.0 or higher
-- MongoDB (local or cloud)
-- Discord Bot Token
+- **Node.js** v18+
+- **MongoDB** (local or Atlas)
+- **Discord Bot Token**
 
-### Manual Installation
+### Installation
 
-1. **Clone the repository**
+```bash
+git clone <repository-url>
+cd Gridkeeper
+npm install
+cp env.example .env # Edit .env with your values
+```
 
-   ```bash
-   git clone <repository-url>
-   cd GridkeeperBot
-   ```
+### Setup
 
-2. **Install dependencies**
+1. Configure your `.env` file with your Discord bot token, MongoDB URI, and other required values.
+2. Set up your bot in the [Discord Developer Portal](https://discord.com/developers/applications) and invite it to your server with the correct permissions.
 
-   ```bash
-   npm install
-   ```
+### Running the Bot
 
-3. **Configure environment variables**
+```bash
+# Development mode (with auto-restart)
+npm run dev
+# Production mode
+npm start
+```
 
-   ```bash
-   cp env.example .env
-   ```
+---
 
-   Edit `.env` with your configuration values.
-
-4. **Set up MongoDB**
-   - Install MongoDB locally or use MongoDB Atlas
-   - Update `MONGODB_URI` in your `.env` file
-
-5. **Create Discord Bot**
-   - Go to [Discord Developer Portal](https://discord.com/developers/applications)
-   - Create a new application
-   - Add a bot to your application
-   - Copy the bot token to your `.env` file
-   - Enable necessary intents (Server Members, Message Content)
-
-6. **Invite bot to your server**
-   - Use the OAuth2 URL generator in Discord Developer Portal
-   - Select bot scope and required permissions
-   - Use the generated URL to invite the bot
-
-7. **Run the bot**
-
-   ```bash
-   # Development mode
-   npm run dev
-   
-   # Production mode
-   npm start
-   ```
-
-## Deployment
-
-### 🚀 Free Hosting Options
-
-- **Railway** (Recommended) - Easy deployment with $5 monthly credit
-- **Render** - 750 hours/month free, sleeps after inactivity
-- **Heroku** - Paid plans starting at $7/month
-- **Fly.io** - 3 free VMs with good performance
-
-See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment guides.
-
-## Available Scripts
-
-- `npm start` - Start the bot in production mode
-- `npm run dev` - Start the bot in development mode with auto-restart
-- `npm run setup` - Interactive setup script for environment variables
-- `npm run backup` - Backup your MongoDB database
-- `npm run lint` - Run ESLint to check code quality
-- `npm run test` - Run tests
-
-## Configuration
+## ⚙️ Configuration
 
 ### Required Environment Variables
 
@@ -153,80 +82,102 @@ See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment guides.
 
 - `BOT_PREFIX`: Command prefix (default: !)
 - `LOG_LEVEL`: Logging level (default: info)
-- `WELCOME_CHANNEL_ID`: Channel for welcome messages
-- `LOG_CHANNEL_ID`: Channel for moderation logs
-- `MODERATOR_ROLE_ID`: Role ID for moderators
-- `MUTED_ROLE_ID`: Role ID for muted users
+- `WELCOME_CHANNEL_ID`, `LOG_CHANNEL_ID`, `MODERATOR_ROLE_ID`, `MUTED_ROLE_ID`, etc.
 
-## Commands
+---
 
-### General Commands
+## 📝 Usage & Commands
 
-- `!help` - Show help menu
-- `!ping` - Check bot latency
-- `!info` - Server information
-- `!user <@user>` - User profile information
+### Moderation
 
-### Moderation Commands
+- `/purge amount:50 filter:bot user:@username reason:Cleanup`  
+- `/bulkdelete amount:500 filter:links --silent`
+- `!purge 50 bot @username --reason "Cleanup"`
+- `!bulkdelete 500 links --silent`
 
-- `!warn <@user> <reason>` - Warn a user
-- `!mute <@user> <duration> <reason>` - Mute a user
-- `!kick <@user> <reason>` - Kick a user
-- `!ban <@user> <reason>` - Ban a user
-- `!unban <user_id>` - Unban a user
-- `!modlogs <@user>` - View moderation history
+Other moderation:
 
-### Game Commands
+- `!warn <@user> <reason>`
+- `!mute <@user> <duration> <reason>`
+- `!kick <@user> <reason>`
+- `!ban <@user> <reason>`
+- `!modlogs <@user>`
 
-- `!flip` - Flip a coin
-- `!stats` - View your game statistics
-- `!leaderboard` - View coin flip leaderboard
+### General
 
-### Welcome Commands
+- `!help` — Show help menu
+- `!ping` — Check bot latency
+- `!info` — Server info
+- `!user <@user>` — User profile
 
-- `!welcome <@user>` - Manually welcome a user
-- `!setwelcome <message>` - Set custom welcome message
+### Games
 
-## Project Structure
+- `!flip` — Flip a coin
+- `!stats` — Your game stats
+- `!leaderboard` — Coin flip leaderboard
+
+### Welcome
+
+- `!welcome <@user>` — Manually welcome a user
+- `!setwelcome <message>` — Set custom welcome message
+
+---
+
+## 🏗️ Project Structure
 
 ```
 src/
 ├── index.js              # Main bot entry point
-├── config/
-│   ├── database.js       # Database configuration
-│   └── logger.js         # Logging configuration
-├── commands/
-│   ├── general/          # General commands
-│   ├── moderation/       # Moderation commands
-│   ├── games/           # Game commands
-│   └── welcome/         # Welcome commands
-├── events/
-│   ├── ready.js         # Bot ready event
-│   ├── messageCreate.js # Message handling
-│   ├── guildMemberAdd.js # Member join handling
-│   └── interactionCreate.js # Slash command handling
-├── utils/
-│   ├── database.js      # Database utilities
-│   ├── permissions.js   # Permission checking
-│   └── helpers.js       # Helper functions
-└── models/
-    ├── User.js          # User data model
-    ├── Guild.js         # Guild settings model
-    └── ModLog.js        # Moderation logs model
+├── config/               # Configuration files
+├── commands/             # Command modules
+│   ├── general/
+│   ├── moderation/
+│   └── ...
+├── events/               # Event handlers
+├── tasks/                # Scheduled/automated tasks
+├── utils/                # Utility functions
+└── ...
 ```
 
-## Contributing
+---
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+## ☁️ Deployment
 
-## License
+- **Railway** (Recommended)
+- **Render**
+- **Heroku**
+- **Fly.io**
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed guides.
 
-## Support
+---
 
-For support, please open an issue on GitHub or contact the bot owner.
+## 🤝 Contributing
+
+1. Fork the repo and create your branch
+2. Make your changes and add tests if possible
+3. Open a pull request with a clear description
+
+---
+
+## 📄 License
+
+MIT License — see [LICENSE](LICENSE) for details.
+
+---
+
+## 🙏 Credits
+
+- Built with [discord.js](https://discord.js.org/)
+- Inspired by the Discord community and open-source contributors
+
+---
+
+## 💬 Support & Feedback
+
+- Open an issue or discussion on GitHub
+- PRs and suggestions welcome!
+
+---
+
+**Gridkeeper** — The all-in-one Discord bot for modern communities.
